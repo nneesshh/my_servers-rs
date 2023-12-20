@@ -60,7 +60,7 @@ pub fn launch(_conf: &Arc<Conf>) {
         let step_srv = srv.clone();
         startup.add_step("robots connect", move || {
             //
-            const ROBOT_NUM: usize = 2;
+            const ROBOT_NUM: usize = 1;
             for i in 0..ROBOT_NUM {
                 do_connect_to_test_server(&step_srv, i + 1);
             }

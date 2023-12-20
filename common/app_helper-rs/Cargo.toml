@@ -11,7 +11,6 @@ license = "MIT/Apache-2.0"
 repository = ""
 exclude = ["/.travis.yml", "/appveyor.yml"]
 edition = "2021"
-readme = "README.md"
 build = false
 
 [dependencies]
@@ -19,13 +18,20 @@ lazy_static = "1"
 paste = "1"
 log = "0.4"
 
-arc-swap = { path = "../arc-swap" }
-atomic = { path = "../atomic-rs" }
-hashbrown = { path = "../hashbrown" }
-parking_lot = { path = "../parking_lot" }
-prost = { path = "../prost"}
-roxmltree = { path = "../roxmltree" }
-clap = { path = "../clap" }
-commlib = { path = "../commlib" }
-my_logger =  { path = "../my_logger-rs" }
-net_packet = { path = "../net_packet-rs" }
+arc-swap = { path = "../../libs/arc-swap" }
+atomic = { path = "../../libs/atomic-rs" }
+hashbrown = { path = "../../libs/hashbrown" }
+parking_lot = { path = "../../libs/parking_lot" }
+prost = { path = "../../libs/prost"}
+roxmltree = { path = "../../libs/roxmltree" }
+clap = { path = "../../libs/clap" }
+commlib = { path = "../../libs/commlib" }
+my_logger =  { path = "../../libs/my_logger-rs" }
+net_packet = { path = "../../libs/net_packet-rs" }
+
+proto_inner = { path = "../proto_inner-rs" }
+
+[build-dependencies]
+dunce = "1"
+miette = { version = "5", features = ["fancy"] } # optional but gives nicer error messages!
+tonic-build = "0.10"

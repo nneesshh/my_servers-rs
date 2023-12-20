@@ -1,4 +1,6 @@
-//! AppHelper: app, conf
+//!
+//!  AppHelper: app, conf, net_proxy, cluster, etc
+//!
 
 ///
 pub mod conf;
@@ -29,8 +31,8 @@ pub use net_packet_encdec::{ENCRYPT_KEY_LEN, ENCRYPT_MAX_LEN};
 
 ///
 mod net_proxy;
-pub use net_proxy::NetProxy;
 pub use net_proxy::write_prost_message;
+pub use net_proxy::NetProxy;
 
 ///
 mod rpc;
@@ -39,6 +41,3 @@ pub use rpc::*;
 ///
 mod cluster;
 pub use cluster::Cluster;
-
-///
-pub mod proto;

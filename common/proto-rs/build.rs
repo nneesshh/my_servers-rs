@@ -24,6 +24,7 @@ fn main() -> miette::Result<()> {
     );
 
     // Protos
+    #[cfg(feature="prost_style")]
     #[cfg(windows)]
     tonic_build::configure()
         .build_client(false)
@@ -35,8 +36,6 @@ fn main() -> miette::Result<()> {
                 "protos/peer.proto",
                 "protos/cmd.proto",
                 "protos/base.proto",
-                "protos/inner/commlib.proto",
-                "protos/inner/rpc.proto",
             ],
             &["protos"],
         )

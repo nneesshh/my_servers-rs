@@ -7,17 +7,17 @@ use commlib::{ConnId, PacketType};
 use commlib::{FROM_CLIENT_PKT_LEADING_FIELD_SIZE, PKT_LEADING_FIELD_SIZE_DEFAULT};
 
 /// 4字节包体前导长度字段 + 2字节协议号 :
-///     leading(pkt_full_len)(4) + cmd(2)
+///     leading(full_len)(4) + cmd(2)
 #[allow(dead_code)]
 const SERVER_INNER_HEADER_SIZE: usize = PKT_LEADING_FIELD_SIZE_DEFAULT + 2;
 
 /// 4字节包体前导长度字段 + 2字节协议号(发往客户端) :
-///     leading( pkt_full_len)(4) + cmd(2)
+///     leading( full_len)(4) + cmd(2)
 #[allow(dead_code)]
 const TO_CLIENT_HEADER_SIZE: usize = PKT_LEADING_FIELD_SIZE_DEFAULT + 2;
 
 /// 2字节包体前导长度字段 + 1字节序号 + 2字节协议号(来自客户端) :
-///     leading(pkt_full_len)(2) + client_no(1) + cmd(2)
+///     leading(full_len)(2) + client_no(1) + cmd(2)
 #[allow(dead_code)]
 const FROM_CLIENT_HEADER_SIZE: usize = FROM_CLIENT_PKT_LEADING_FIELD_SIZE + 1 + 2;
 
@@ -325,16 +325,17 @@ fn add_packet_no(encrypt: &mut EncryptData, no: i8) -> bool {
 //#[inline(always)]
 fn write_server_packet(pkt: &mut NetPacketGuard) {
     //
-    assert!(pkt.body_len() > 0);
+    let wrote_body_len = pkt.wrote_body_len();
+    assert!(wrote_body_len > 0);
 
     // 组合最终包 (Notice: Prepend 是反向添加)
     // 2 字节 cmd
     let cmd = pkt.cmd as u16;
     pkt.prepend_u16(cmd);
 
-    // 4 字节包体长度
-    let size = SERVER_INNER_HEADER_SIZE + pkt.body_size;
-    pkt.prepend_u32(size as u32);
+    // 4 字节包体长度 + 2 字节协议号 = HEADER_SIZE
+    let full_len = SERVER_INNER_HEADER_SIZE + wrote_body_len;
+    pkt.prepend_u32(full_len as u32);
 }
 
 /// Server inner 读取包头
@@ -343,8 +344,9 @@ fn read_server_packet(pkt: &mut NetPacketGuard) {
     // MUST only one packet in buffer
 
     // 4 字节包体长度
-    let pkt_full_len = pkt.read_u32() as usize;
-    pkt.body_size = pkt_full_len - SERVER_INNER_HEADER_SIZE;
+    let full_len = pkt.read_u32() as usize;
+    let body_size = full_len - SERVER_INNER_HEADER_SIZE;
+    assert!(body_size > 0);
 
     // 2 字节 cmd
     pkt.cmd = pkt.read_u16();
@@ -354,16 +356,17 @@ fn read_server_packet(pkt: &mut NetPacketGuard) {
 #[inline(always)]
 fn write_client_packet(pkt: &mut NetPacketGuard) {
     //
-    assert!(pkt.body_len() > 0);
+    let wrote_body_len = pkt.wrote_body_len();
+    assert!(wrote_body_len > 0);
 
     // 组合最终包 (Notice: Prepend 是反向添加)
     // 2 字节 cmd
     let cmd = pkt.cmd as u16;
     pkt.prepend_u16(cmd);
 
-    // 4 字节包体长度
-    let size = TO_CLIENT_HEADER_SIZE + pkt.body_size;
-    pkt.prepend_u32(size as u32);
+    // 4 字节包体长度 + 2 字节协议号 = HEADER_SIZE
+    let full_len = TO_CLIENT_HEADER_SIZE + wrote_body_len;
+    pkt.prepend_u32(full_len as u32);
 }
 
 /// Server 读取包头 ( 方向 client -> server )
@@ -372,18 +375,18 @@ fn read_client_packet(pkt: &mut NetPacketGuard, key: &str) {
     // MUST only one packet in buffer
 
     // 2 字节包体长度
-    let pkt_full_len = pkt.read_u16() as usize;
-    pkt.body_size = pkt_full_len - FROM_CLIENT_HEADER_SIZE;
+    let full_len = pkt.read_u16() as usize;
+    let body_size = full_len - FROM_CLIENT_HEADER_SIZE;
+    assert!(body_size > 0);
 
     // 1 字节序号
     let no = pkt.read_u8() as i8;
     pkt.set_client_no(no);
 
-    // 解密
-    let body_size = pkt.body_size;
-    let body = pkt.as_read_mut();
-    assert_eq!(body_size, body.len());
-    decrypt_packet(body, key, no);
+    // 解密 ( 从 cmd 位置开始 )
+    let read_mut = pkt.as_read_mut();
+    assert_eq!(read_mut.len() - std::mem::size_of::<u16>(), body_size);
+    decrypt_packet(read_mut, key, no);
 
     // 2 字节 cmd
     pkt.cmd = pkt.read_u16();
@@ -393,24 +396,26 @@ fn read_client_packet(pkt: &mut NetPacketGuard, key: &str) {
 #[inline(always)]
 fn write_robot_packet(pkt: &mut NetPacketGuard, key: &str) {
     //
-    assert!(pkt.body_len() > 0);
+    let wrote_body_len = pkt.wrote_body_len();
+    assert!(wrote_body_len > 0);
 
     // 组合最终包 (Notice: Prepend 是反向添加)
     // 2 字节 cmd
     let cmd = pkt.cmd as u16;
     pkt.prepend_u16(cmd);
 
-    // 加密
+    // 加密 ( 从 cmd 位置开始 )
     let no = pkt.client_no();
-    let body = pkt.as_read_mut();
-    encrypt_packet(body, key, no);
+    let read_mut = pkt.as_read_mut();
+    assert_eq!(read_mut.len() - std::mem::size_of::<u16>(), wrote_body_len);
+    encrypt_packet(read_mut, key, no);
 
     // 1 字节序号
     pkt.prepend_u8(no as u8);
 
-    // 2 字节包体长度
-    let size = FROM_CLIENT_HEADER_SIZE + pkt.body_size;
-    pkt.prepend_u16(size as u16);
+    // 2 字节包体长度 + 1 字节序号 + 2 字节协议号 = HEADER_SIZE
+    let full_len = FROM_CLIENT_HEADER_SIZE + wrote_body_len;
+    pkt.prepend_u16(full_len as u16);
 }
 
 /// robot 读取包头
@@ -419,8 +424,9 @@ fn read_robot_packet(pkt: &mut NetPacketGuard) {
     // MUST only one packet in buffer
 
     // 4 字节包体长度
-    let pkt_full_len = pkt.read_u32() as usize;
-    pkt.body_size = pkt_full_len - TO_CLIENT_HEADER_SIZE;
+    let full_len = pkt.read_u32() as usize;
+    let body_size = full_len - TO_CLIENT_HEADER_SIZE;
+    assert!(body_size > 0);
 
     // 2 字节 cmd
     pkt.cmd = pkt.read_u16();
@@ -430,7 +436,8 @@ fn read_robot_packet(pkt: &mut NetPacketGuard) {
 #[inline(always)]
 fn write_client_ws_packet(pkt: &mut NetPacketGuard) {
     //
-    assert!(pkt.body_len() > 0);
+    let wrote_body_len = pkt.wrote_body_len();
+    assert!(wrote_body_len > 0);
 
     // 组合最终包 (Notice: Prepend 是反向添加)
     // 2 字节 cmd
@@ -444,17 +451,17 @@ fn read_client_ws_packet(pkt: &mut NetPacketGuard, key: &str) {
     // MUST only one packet in buffer
 
     //
-    pkt.body_size = pkt.buffer_raw_len() - FROM_CLIENT_HEADER_SIZE_WS;
+    let body_size = pkt.buffer_raw_len() - FROM_CLIENT_HEADER_SIZE_WS;
+    assert!(body_size > 0);
 
     // 1 字节序号
     let no = pkt.read_u8() as i8;
     pkt.set_client_no(no);
 
-    // 解密
-    let body_size = pkt.body_size;
-    let body = pkt.as_read_mut();
-    assert_eq!(body_size, body.len());
-    decrypt_packet(body, key, no);
+    // 解密 ( 从 cmd 位置开始 )
+    let read_mut = pkt.as_read_mut();
+    assert_eq!(read_mut.len() - std::mem::size_of::<u16>(), body_size);
+    decrypt_packet(read_mut, key, no);
 
     // 2 字节 cmd
     pkt.cmd = pkt.read_u16();
@@ -464,17 +471,19 @@ fn read_client_ws_packet(pkt: &mut NetPacketGuard, key: &str) {
 #[inline(always)]
 fn write_robot_ws_packet(pkt: &mut NetPacketGuard, key: &str) {
     //
-    assert!(pkt.body_len() > 0);
+    let wrote_body_len = pkt.wrote_body_len();
+    assert!(wrote_body_len > 0);
 
     // 组合最终包 (Notice: Prepend 是反向添加)
     // 2 字节 cmd
     let cmd = pkt.cmd as u16;
     pkt.prepend_u16(cmd);
 
-    // 加密
+    // 加密 ( 从 cmd 位置开始 )
     let no = pkt.client_no();
-    let body = pkt.as_read_mut();
-    encrypt_packet(body, key, no);
+    let read_mut = pkt.as_read_mut();
+    assert_eq!(read_mut.len() - std::mem::size_of::<u16>(), wrote_body_len);
+    encrypt_packet(read_mut, key, no);
 
     // 1 字节序号
     pkt.prepend_u8(no as u8);
@@ -486,7 +495,8 @@ fn read_robot_ws_packet(pkt: &mut NetPacketGuard) {
     // MUST only one packet in buffer
 
     //
-    pkt.body_size = pkt.buffer_raw_len() - TO_CLIENT_HEADER_SIZE_WS;
+    let body_size = pkt.buffer_raw_len() - TO_CLIENT_HEADER_SIZE_WS;
+    assert!(body_size > 0);
 
     // 2 字节 cmd
     pkt.cmd = pkt.read_u16();

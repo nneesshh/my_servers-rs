@@ -4,11 +4,10 @@ use std::{cell::RefCell, rc::Rc};
 use atomic::{Atomic, Ordering};
 use hashbrown::HashMap;
 use net_packet::CmdId;
-use prost::Message;
+use prost::Message as ProstMessage;
 
 use commlib::{ConnId, NodeId, TcpConn};
 
-use super::proto;
 use super::NetProxy;
 
 static WAITER_NEXT_ID: Atomic<u64> = Atomic::new(1_u64);
@@ -57,7 +56,7 @@ pub struct Cluster {
     node_ready_cb: Box<dyn Fn(&mut NetProxy, &NodeData)>,
 
     // handshake callback
-    handshake_cb: Box<dyn Fn(&mut NetProxy, &proto::InnerNodeInfo)>,
+    handshake_cb: Box<dyn Fn(&mut NetProxy, &proto_inner::InnerNodeInfo)>,
 
     // wait node list
     wait_nodes: Vec<Waiter>,
@@ -87,7 +86,7 @@ impl Cluster {
 
     /// 连接成功后，发送节点信息
     pub fn on_connect(&self, net_proxy: &mut NetProxy, conn: &Arc<TcpConn>) {
-        let mut req = proto::InnerNodeInfo {
+        let mut req = proto_inner::InnerNodeInfo {
             nid: 0,
             r#type: 0,
             sids: Vec::default(),
@@ -101,7 +100,7 @@ impl Cluster {
         //
         net_proxy.send_proto(
             &*conn,
-            proto::InnerReservedCmd::IrcNodeHandshake as CmdId,
+            proto_inner::InnerReservedCmd::IrcNodeHandshake as CmdId,
             &req,
         );
     }
@@ -127,13 +126,13 @@ impl Cluster {
         cmd: CmdId,
         data: &[u8],
     ) {
-        let result = proto::InnerNodeInfo::decode(data);
+        let result = proto_inner::InnerNodeInfo::decode(data);
         match result {
             Ok(msg) => {
                 self.update_node_info(net_proxy, conn, &msg);
 
                 let my = &self.my_node;
-                let ntf = proto::InnerNodeInfo {
+                let ntf = proto_inner::InnerNodeInfo {
                     nid: my.nid,
                     r#type: my.nid as i32,
                     sids: Vec::default(),
@@ -143,7 +142,7 @@ impl Cluster {
 
                 (self.handshake_cb)(net_proxy, &ntf);
 
-                net_proxy.send_proto(conn, proto::InnerReservedCmd::IrcNodeInfoNtf as CmdId, &ntf);
+                net_proxy.send_proto(conn, proto_inner::InnerReservedCmd::IrcNodeInfoNtf as CmdId, &ntf);
             }
             Err(err) => {
                 log::error!(
@@ -162,7 +161,7 @@ impl Cluster {
         cmd: CmdId,
         data: &[u8],
     ) {
-        let result = proto::InnerNodeInfo::decode(data);
+        let result = proto_inner::InnerNodeInfo::decode(data);
         match result {
             Ok(msg) => {
                 self.update_node_info(net_proxy, conn, &msg);
@@ -184,7 +183,7 @@ impl Cluster {
         cmd: CmdId,
         data: &[u8],
     ) {
-        let result = proto::InnerRpcReturn::decode(data);
+        let result = proto_inner::InnerRpcReturn::decode(data);
         match result {
             Ok(msg) => {
                 let wait_handler = &mut self.waiting_handlers;
@@ -256,7 +255,7 @@ impl Cluster {
         &mut self,
         net_proxy: &mut NetProxy,
         conn: &TcpConn,
-        info: &proto::InnerNodeInfo,
+        info: &proto_inner::InnerNodeInfo,
     ) {
         //
         let hd = conn.hd;
@@ -317,7 +316,7 @@ impl Cluster {
         net_proxy: &mut NetProxy,
         conn: &TcpConn,
         cmd: CmdId,
-        msg: &impl prost::Message,
+        msg: &impl ProstMessage,
     ) {
         net_proxy.send_proto(conn, cmd, msg);
     }
@@ -328,7 +327,7 @@ impl Cluster {
         &mut self,
         net_proxy: &mut NetProxy,
         cmd: CmdId,
-        msg: &impl prost::Message,
+        msg: &impl ProstMessage,
     ) {
         self.send_to_server(net_proxy, ServerType::WorldSrv as NodeId, cmd, msg);
     }
@@ -340,7 +339,7 @@ impl Cluster {
         net_proxy: &mut NetProxy,
         nid: NodeId,
         cmd: CmdId,
-        msg: &impl prost::Message,
+        msg: &impl ProstMessage,
     ) {
         let node_opt = self.nodes.get(&nid);
         if let Some(node) = node_opt {
@@ -368,7 +367,7 @@ impl Cluster {
         &mut self,
         net_proxy: &mut NetProxy,
         cmd: CmdId,
-        msg: &impl prost::Message,
+        msg: &impl ProstMessage,
     ) {
         for (_, node) in &self.nodes {
             if let Some(conn) = &node.conn_opt {
@@ -390,7 +389,7 @@ impl Cluster {
         net_proxy: &mut NetProxy,
         nid: NodeId,
         cmd: CmdId,
-        msg: &impl prost::Message,
+        msg: &impl ProstMessage,
     ) {
         self.send_to_server(net_proxy, nid, cmd, msg);
     }
@@ -402,7 +401,7 @@ impl Cluster {
         net_proxy: &mut NetProxy,
         nid: NodeId,
         cmd: CmdId,
-        msg: &impl prost::Message,
+        msg: &impl ProstMessage,
         f: F,
     ) where
         F: Fn(&mut NetProxy, &TcpConn, CmdId, &[u8]) + 'static,
@@ -438,19 +437,19 @@ fn regitser_packet_handler(net_proxy: &mut NetProxy, cluster: &Rc<RefCell<Cluste
     //
     cluster_register_packet_handler!(
         net_proxy,
-        proto::InnerReservedCmd::IrcNodeHandshake,
+        proto_inner::InnerReservedCmd::IrcNodeHandshake,
         handle_node_handshake,
         cluster
     );
     cluster_register_packet_handler!(
         net_proxy,
-        proto::InnerReservedCmd::IrcNodeInfoNtf,
+        proto_inner::InnerReservedCmd::IrcNodeInfoNtf,
         handle_node_info_notify,
         cluster
     );
     cluster_register_packet_handler!(
         net_proxy,
-        proto::InnerReservedCmd::IrcRpcReturn,
+        proto_inner::InnerReservedCmd::IrcRpcReturn,
         handle_rpc_return,
         cluster
     );
@@ -462,11 +461,11 @@ mod tests {
 
     use commlib::{ConnId, PacketType, TcpConn};
     use net_packet::{take_small_packet, CmdId};
-    use prost::Message;
+    use prost::Message as ProstMessage;
 
     use crate::net_packet_encdec::encode_packet_server;
     use crate::write_prost_message;
-    use crate::{proto, Cluster, NetProxy};
+    use crate::{Cluster, NetProxy};
 
     #[test]
     fn cluster_packet_handler() {
@@ -479,8 +478,8 @@ mod tests {
 
         // call packet handler
         {
-            let cmd = proto::InnerReservedCmd::IrcNodeInfoNtf as CmdId;
-            let info = proto::InnerNodeInfo {
+            let cmd = proto_inner::InnerReservedCmd::IrcNodeInfoNtf as CmdId;
+            let info = proto_inner::InnerNodeInfo {
                 nid: 1234,
                 r#type: 1234,
                 ..Default::default()

@@ -23,10 +23,8 @@ fn main() -> miette::Result<()> {
         &profile, &target, &out_dir
     );
 
-    // Re-run
-    println!("cargo:rerun-if-changed=src/main.rs");
-
     // Protos
+    #[cfg(feature="prost_style")]
     #[cfg(windows)]
     tonic_build::configure()
         .build_client(false)
@@ -35,9 +33,6 @@ fn main() -> miette::Result<()> {
         .out_dir("protos/out")
         .compile(
             &[
-                "protos/peer.proto",
-                "protos/cmd.proto",
-                "protos/base.proto",
                 "protos/inner/commlib.proto",
                 "protos/inner/rpc.proto",
             ],

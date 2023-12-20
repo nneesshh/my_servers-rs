@@ -1,5 +1,5 @@
 [package]
-name = "proto"
+name = "proto_inner"
 version = "1.0.0"
 authors = ["nneesshh <neckshotk@gmail.com>"]
 description = "Game proto library"
@@ -13,7 +13,7 @@ panic = "abort"
 panic = "abort"
 
 [features]
-default = ["google_style"]
+default = ["prost_style"]
 prost_style = ["prost", "tonic"]
 google_style = ["protobuf"]
 

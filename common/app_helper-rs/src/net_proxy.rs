@@ -164,7 +164,6 @@ impl NetProxy {
         let mut pkt = take_packet(slice.len());
         pkt.set_leading_field_size(self.leading_field_size);
         pkt.set_cmd(cmd);
-        assert_eq!(pkt.body_size, 0);
         pkt.append_slice(slice);
 
         //
@@ -172,7 +171,7 @@ impl NetProxy {
     }
 
     ///
-    #[inline(always)]
+    //[inline(always)]
     pub fn send_proto<M>(&mut self, conn: &TcpConn, cmd: CmdId, msg: &M)
     where
         M: prost::Message,
@@ -193,7 +192,7 @@ impl NetProxy {
     }
 
     ///
-    #[inline(always)]
+    //#[inline(always)]
     pub fn send_packet(&mut self, conn: &TcpConn, mut pkt: NetPacketGuard) {
         let hd = conn.hd;
         let cmd = pkt.cmd();
