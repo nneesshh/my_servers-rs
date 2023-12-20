@@ -1,0 +1,119 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'commlib-test'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=commlib-test",
+                    "--package=commlib-test"
+                ],
+                "filter": {
+                    "name": "commlib-test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'commlib-test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=commlib-test",
+                    "--package=commlib-test"
+                ],
+                "filter": {
+                    "name": "commlib-test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'test_server'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=test_server",
+                    "--package=commlib-test"
+                ],
+                "filter": {
+                    "name": "test_server",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'test_server'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=test_server",
+                    "--package=commlib-test"
+                ],
+                "filter": {
+                    "name": "test_server",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'test_http'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=test_http",
+                    "--package=commlib-test"
+                ],
+                "filter": {
+                    "name": "test_http",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'test_http'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=test_http",
+                    "--package=commlib-test"
+                ],
+                "filter": {
+                    "name": "test_http",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
