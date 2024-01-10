@@ -1,0 +1,9 @@
+
+backup/rust-openssl-20231221
+.vs/
+obj/
+
+*.obj
+*.exe
+*.pdb
+*.vcxproj.user

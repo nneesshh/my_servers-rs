@@ -30,8 +30,3 @@ my_logger =  { path = "../../libs/my_logger-rs" }
 net_packet = { path = "../../libs/net_packet-rs" }
 
 proto_inner = { path = "../proto_inner-rs" }
-
-[build-dependencies]
-dunce = "1"
-miette = { version = "5", features = ["fancy"] } # optional but gives nicer error messages!
-tonic-build = "0.10"

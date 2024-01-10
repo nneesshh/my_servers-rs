@@ -142,7 +142,11 @@ impl Cluster {
 
                 (self.handshake_cb)(net_proxy, &ntf);
 
-                net_proxy.send_proto(conn, proto_inner::InnerReservedCmd::IrcNodeInfoNtf as CmdId, &ntf);
+                net_proxy.send_proto(
+                    conn,
+                    proto_inner::InnerReservedCmd::IrcNodeInfoNtf as CmdId,
+                    &ntf,
+                );
             }
             Err(err) => {
                 log::error!(
@@ -323,12 +327,7 @@ impl Cluster {
 
     ///
     #[inline(always)]
-    pub fn send_to_world(
-        &mut self,
-        net_proxy: &mut NetProxy,
-        cmd: CmdId,
-        msg: &impl ProstMessage,
-    ) {
+    pub fn send_to_world(&mut self, net_proxy: &mut NetProxy, cmd: CmdId, msg: &impl ProstMessage) {
         self.send_to_server(net_proxy, ServerType::WorldSrv as NodeId, cmd, msg);
     }
 
