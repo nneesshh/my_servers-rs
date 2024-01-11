@@ -25,7 +25,6 @@ chrono = "0.4"
 
 atomic = { path = "../../libs/atomic-rs" }
 base64 = { path = "../../libs/rust-base64" }
-bytes = { path = "../../libs/bytes" }
 hashbrown = { path = "../../libs/hashbrown" }
 http = { path = "../../libs/http" }
 parking_lot = { path = "../../libs/parking_lot" }

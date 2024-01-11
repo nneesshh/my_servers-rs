@@ -3,7 +3,7 @@ use commlib::with_tls_mut;
 use crate::explode::G_EXPLODE;
 
 #[no_mangle]
-pub extern "C" fn follow_ip(ip: *const u8, len: u64) {
+pub extern "C" fn follow_ip(ip: *const c_char, len: u64) {
     //
     let ip_str = unsafe {
         let slice = std::slice::from_raw_parts(ip, len as usize);
@@ -16,10 +16,10 @@ pub extern "C" fn follow_ip(ip: *const u8, len: u64) {
 }
 
 #[no_mangle]
-pub extern "C" fn filter_ip(ip: *const u8, len: u64) {
+pub extern "C" fn filter_ip(ip: *const c_char, len: u64) {
      //
      let ip_str = unsafe {
-        let slice = std::slice::from_raw_parts(ip, len as usize);
+        let slice = std::slice::from_raw_parts(ip as *const u8, len as usize);
         std::str::from_utf8_unchecked(slice)
     };
 
