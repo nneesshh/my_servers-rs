@@ -8,8 +8,7 @@ use std::sync::Arc;
 use serde_json::json;
 use serde_json::Value as Json;
 
-
-use commlib::{http_server_listen, G_SERVICE_NET, XmlReader, ZoneId};
+use commlib::{http_server_listen, XmlReader, ZoneId, G_SERVICE_NET};
 use commlib::{NodeState, ServiceHandle, ServiceRs, TcpConn};
 use db_access::MySqlAddr;
 
@@ -98,11 +97,34 @@ pub fn launch_http_server() {
             }
         };
 
-        let msg = json!({
+        // read mine.json
+        let msg_opt = {
+            let file_r = std::fs::File::open("res/mine.json");
+            match file_r {
+                Ok(file) => {
+                    //
+                    let msg_r = serde_json::from_reader(file);
+                    match msg_r {
+                        Ok(msg) => Some(msg),
+                        Err(err) => {
+                            //
+                            log::error!("file should be proper JSON!!! error: {}!!!", err);
+                            None
+                        }
+                    }
+                }
+                Err(err) => {
+                    log::error!("file should open read only!!! error: {}!!!", err);
+                    None
+                }
+            }
+        };
+        let msg = msg_opt.unwrap_or(json!({
             "msg": "ok",
             "ec": 0,
             "data": ["18.163.14.56"],
-        });
+        }));
+
         let resp_body_vec = msg.to_string().as_bytes().to_vec();
 
         //
@@ -114,10 +136,9 @@ pub fn launch_http_server() {
     http_server_listen(addr.as_str(), request_fn, true, &G_SERVICE_NET);
 }
 
-fn save_content_to_file(body:&str) {
+fn save_content_to_file(body: &str) {
     let data_r = serde_json::from_str::<Json>(body);
-    let content = 
-    match data_r {
+    let content = match data_r {
         Ok(data) => {
             //
             let payload_opt = data.get("data");
@@ -155,14 +176,14 @@ fn save_content_to_file(body:&str) {
             };
 
             //
-            
-             // write to file
-             let path = PathBuf::from("out/zones/");
-             let mut full_path = PathBuf::from(&path);
-             let full_name = std::format!("{}_{}_xml", group_id, zone_id);
-             full_path.push(full_name);
 
-             // ensure path
+            // write to file
+            let path = PathBuf::from("out/zones/");
+            let mut full_path = PathBuf::from(&path);
+            let full_name = std::format!("{}_{}_xml", group_id, zone_id);
+            full_path.push(full_name);
+
+            // ensure path
             std::fs::create_dir_all(&path).unwrap();
 
             std::fs::write(&full_path, content.as_bytes()).unwrap();
