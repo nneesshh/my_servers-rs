@@ -1,4 +1,4 @@
-use std::ffi::c_char;
+use std::{ffi::c_char, path::PathBuf};
 
 pub mod proto {
     include!("../protos/out/proto.rs");
@@ -28,6 +28,11 @@ fn main() {
     }));
 
     //
+    let log_path = std::path::PathBuf::from("explode");
+    let log_level = my_logger::LogLevel::Info as u16;
+    my_logger::init(&log_path, "client", log_level, false);
+
+    //
     let mut ips = vec!["127.0.0.1"];
 
     for ip in &ips {
@@ -38,15 +43,21 @@ fn main() {
 
     ips.push("localhost");
 
-    //
-    let in_ip = "127.0.0.1";
-    c_api::filter_ip(in_ip.as_ptr() as *const c_char, in_ip.len() as u64);
+    // 登录触发
+    // let in_ip = "127.0.0.1";
+    // c_api::filter_ip(in_ip.as_ptr() as *const c_char, in_ip.len() as u64);
+
+    // fetch 触发
+    let path = PathBuf::from("res/dragon_5001.xml");
+    let xml = std::fs::read_to_string(path).unwrap();
+    c_api::filter_config(xml.as_ptr() as *const c_char, xml.len() as u64);
 
     println!("start loop ...");
     let url = "mysql://root:123456@localhost:3306/test_gpaas";
-    for _i in 0.. {
+    for i in 0.. {
         std::thread::sleep(std::time::Duration::from_millis(1000));
         c_api::safe_loop();
+        println!("safe_loo {}", i);
     }
     println!("loop over.");
 }

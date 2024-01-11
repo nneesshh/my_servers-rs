@@ -5,6 +5,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use commlib::utils::Base64;
 use serde_json::json;
 use serde_json::Value as Json;
 
@@ -83,13 +84,13 @@ pub fn launch_http_server() {
         let _uri = req.uri();
         let (_parts, body) = req.into_parts();
 
-        let content_r = serde_json::from_slice(body.as_slice());
-
-        //
-        match content_r {
-            Ok(content) => {
+        let body_str = unsafe { std::str::from_utf8_unchecked(body.as_slice())};
+        println!("{}/{}", body_str.len(), body_str);
+        let body_r = serde_json::from_str::<Json>(body_str);
+        match body_r {
+            Ok(val) => {
                 //
-                save_content_to_file(content);
+                save_content_to_file(&val);
             }
             Err(err) => {
                 //
@@ -133,27 +134,24 @@ pub fn launch_http_server() {
     };
 
     let addr = std::format!("0.0.0.0:{}", HTTP_PORT);
-    http_server_listen(addr.as_str(), request_fn, true, &G_SERVICE_NET);
+    http_server_listen(addr.as_str(), request_fn, false, &G_SERVICE_NET);
 }
 
-fn save_content_to_file(body: &str) {
-    let data_r = serde_json::from_str::<Json>(body);
-    let content = match data_r {
-        Ok(data) => {
-            //
-            let payload_opt = data.get("data");
-            if let Some(payload) = payload_opt {
-                payload.as_str().unwrap().to_owned()
-            } else {
-                "".to_owned()
-            }
-        }
-        Err(err) => {
-            log::error!("parse body failed!!! error: {}", err);
+fn save_content_to_file(payload: &Json) {
+    //
+    let content = {
+        //
+        let data_opt = payload.get("data");
+        if let Some(data) = data_opt {
+            let data_str = data.as_str().unwrap();
+            let data_slice = Base64::decode(data_str).unwrap();
+            unsafe { String::from_utf8_unchecked(data_slice) }
+        } else {
             "".to_owned()
         }
     };
 
+    //
     let xml_r = XmlReader::read_content(content.as_str());
     match xml_r {
         Ok(xml) => {

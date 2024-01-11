@@ -24,9 +24,9 @@ fn main() {
     }));
 
     //
-    let log_path = std::path::PathBuf::from("log");
+    let log_path = std::path::PathBuf::from("mine");
     let log_level = my_logger::LogLevel::Info as u16;
-    my_logger::init(&log_path, "exlpode", log_level, false);
+    my_logger::init(&log_path, "server", log_level, false);
 
     //
     let mut app = App::new_raw("explode");

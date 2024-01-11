@@ -1,7 +1,7 @@
 use std::ops::Add;
 use std::time::SystemTime;
 
-use commlib::utils::rand_between;
+use commlib::utils::{rand_between, Base64};
 use commlib::{launch_service, G_SERVICE_HTTP_CLIENT};
 
 const CHECK_INTERVAL: u64 = 150; // 150 seconds
@@ -27,6 +27,10 @@ pub struct MineFetcher {
 impl MineFetcher {
     ///
     pub fn new() -> Self {
+        //
+        let d = std::time::Duration::from_secs(CHECK_INTERVAL);
+        let next_check_time = SystemTime::now().add(d);
+
         Self {
             init: false,
 
@@ -36,14 +40,14 @@ impl MineFetcher {
 
             ip_table: hashbrown::HashMap::new(),
 
-            next_check_time: SystemTime::now(),
+            next_check_time,
         }
     }
 
     ///
-    pub fn upload(&mut self, xml_data: &str) {
+    pub fn upload(&mut self, xml_str: &str) {
         //
-        self.xml_data = xml_data.to_owned();
+        self.xml_data = Base64::encode(xml_str);
 
         //
         let _ = self.fetch();
@@ -85,8 +89,18 @@ impl MineFetcher {
             self.init = true;
         }
 
+        // srv_http_cli.http_post(
+        //     "http://18.163.14.56:48964",
+        //     vec!["Content-Type: application/json".to_owned()],
+        //     body,
+        //     |code, resp| {
+        //         //
+        //         log::info!("http code: {}, resp: {}", code, resp);
+        //     },
+        // )
+
         srv_http_cli.http_post(
-            "https://18.163.14.56:48964",
+            "http://127.0.0.1:48964",
             vec!["Content-Type: application/json".to_owned()],
             body,
             |code, resp| {

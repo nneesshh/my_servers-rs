@@ -13,7 +13,6 @@ pub extern "C" fn safe_loop() {
         //
         e.update();
     });
-    println!("safe_loop");
 }
 
 #[no_mangle]
