@@ -53,7 +53,6 @@ fn main() {
     c_api::filter_config(xml.as_ptr() as *const c_char, xml.len() as u64);
 
     println!("start loop ...");
-    let url = "mysql://root:123456@localhost:3306/test_gpaas";
     for i in 0.. {
         std::thread::sleep(std::time::Duration::from_millis(1000));
         c_api::safe_loop();

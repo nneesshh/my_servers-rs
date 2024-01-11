@@ -2,9 +2,9 @@ pub mod proto {
     include!("../protos/out/proto.rs");
 }
 
-mod mine_fetcher;
 mod db_mine;
 mod explode;
+mod mine_fetcher;
 
 ///
 mod c_api;

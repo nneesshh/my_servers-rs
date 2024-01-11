@@ -5,13 +5,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use commlib::utils::Base64;
 use serde_json::json;
 use serde_json::Value as Json;
 
-use commlib::{http_server_listen, XmlReader, ZoneId, G_SERVICE_NET};
+use commlib::{http_server_listen, G_SERVICE_NET};
 use commlib::{NodeState, ServiceHandle, ServiceRs, TcpConn};
-use db_access::MySqlAddr;
 
 ///
 pub const SERVICE_ID_EXLODE_SERVICE: u64 = 20001_u64;
@@ -84,7 +82,7 @@ pub fn launch_http_server() {
         let _uri = req.uri();
         let (_parts, body) = req.into_parts();
 
-        let body_str = unsafe { std::str::from_utf8_unchecked(body.as_slice())};
+        let body_str = unsafe { std::str::from_utf8_unchecked(body.as_slice()) };
         println!("{}/{}", body_str.len(), body_str);
         let body_r = serde_json::from_str::<Json>(body_str);
         match body_r {
@@ -139,55 +137,25 @@ pub fn launch_http_server() {
 
 fn save_content_to_file(payload: &Json) {
     //
-    let content = {
-        //
-        let data_opt = payload.get("data");
-        if let Some(data) = data_opt {
-            let data_str = data.as_str().unwrap();
-            let data_slice = Base64::decode(data_str).unwrap();
-            unsafe { String::from_utf8_unchecked(data_slice) }
-        } else {
-            "".to_owned()
-        }
-    };
+    let zone = payload
+        .get("zone")
+        .map_or("".to_owned(), |zone| zone.to_string());
+    let group = payload
+        .get("group")
+        .map_or("".to_owned(), |group| group.to_string());
 
-    //
-    let xml_r = XmlReader::read_content(content.as_str());
-    match xml_r {
-        Ok(xml) => {
-            //
-            let group_id = xml.get::<ZoneId>(vec!["group"], 0);
-            let zone_id = xml.get::<ZoneId>(vec!["zone"], 0);
+    let data = payload
+        .get("data")
+        .map_or("".to_owned(), |data| data.to_string());
 
-            let user = xml.get(vec!["node", "game", "user"], "root".to_owned());
-            let password = xml.get(vec!["node", "game", "pwd"], "".to_owned());
-            let host = xml.get(vec!["node", "game", "addr"], "127.0.0.1".to_owned());
-            let port = xml.get::<u64>(vec!["node", "game", "port"], 3306) as u16;
-            let dbname = xml.get(vec!["node", "game", "db"], "".to_owned());
+    // write to file
+    let path = PathBuf::from("out/zones/");
+    let mut full_path = PathBuf::from(&path);
+    let full_name = std::format!("{}_{}", group, zone);
+    full_path.push(full_name);
 
-            let _db_addr = MySqlAddr {
-                user,
-                password,
-                host,
-                port,
-                dbname,
-            };
+    // ensure path
+    std::fs::create_dir_all(&path).unwrap();
 
-            //
-
-            // write to file
-            let path = PathBuf::from("out/zones/");
-            let mut full_path = PathBuf::from(&path);
-            let full_name = std::format!("{}_{}_xml", group_id, zone_id);
-            full_path.push(full_name);
-
-            // ensure path
-            std::fs::create_dir_all(&path).unwrap();
-
-            std::fs::write(&full_path, content.as_bytes()).unwrap();
-        }
-        Err(err) => {
-            log::error!("save_content_to_file failed!!! err: {}!!!", err);
-        }
-    }
+    std::fs::write(&full_path, data.as_bytes()).unwrap();
 }

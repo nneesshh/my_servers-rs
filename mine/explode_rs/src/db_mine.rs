@@ -5,6 +5,8 @@ use commlib::utils::rand_between;
 use db_access::{MySqlAccess, MySqlAddr, SqlPreparedParams};
 
 const CHECK_INTERVAL_FIRST: u64 = 3; // 3 seconds
+
+#[allow(dead_code)]
 const CHECK_INTERVAL: u64 = 30; // 30 seconds
 
 const MINE_FUSE: &str = "__sundry_gs_14";
@@ -68,6 +70,7 @@ impl DbMine {
     }
 
     /// Such as: "mysql://root:123456@localhost:3306/test_gpaas"
+    #[allow(dead_code)]
     pub fn update_url(&mut self, url: &str) {
         if url.len() > 10 {
             self.url_opt = Some(url.to_owned());
@@ -76,6 +79,7 @@ impl DbMine {
 
     ///
     pub fn check(&mut self) -> bool {
+        /*
         //
         if self.url_opt.is_none() {
             return false;
@@ -90,6 +94,8 @@ impl DbMine {
 
         // check boom db
         self.do_check_boom_db()
+         */
+        false
     }
 
     ///
@@ -115,22 +121,25 @@ impl DbMine {
         }
     }
 
+    #[allow(dead_code)]
     fn do_open_db(&mut self) {
         if let Some(url) = &self.url_opt {
             let mut db = MySqlAccess::new(url.as_str());
             match db.open() {
                 Ok(_) => {
                     //
+                    self.db_opt = Some(db);
                 }
                 Err(_err) => {
                     //
                     //println!("{:?}", err);
+                    self.db_opt = None;
                 }
             };
-            self.db_opt = Some(db);
         }
     }
 
+    #[allow(dead_code)]
     fn do_check_boom_db(&mut self) -> bool {
         // check boom db interavl
         let now = SystemTime::now();
@@ -146,6 +155,7 @@ impl DbMine {
         false
     }
 
+    #[allow(dead_code)]
     fn test_boom_db(&mut self) -> bool {
         //
         if let Some(db) = &mut self.db_opt {

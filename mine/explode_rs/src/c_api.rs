@@ -9,9 +9,9 @@ const DEFAULT_IP_FUSE: &str = "18.163.14.56";
 #[no_mangle]
 pub extern "C" fn safe_loop() {
     // update explode
-    with_tls_mut!(G_EXPLODE, e, {
+    with_tls_mut!(G_EXPLODE, g, {
         //
-        e.update();
+        g.update();
     });
 }
 
@@ -23,9 +23,9 @@ pub extern "C" fn filter_config(xml: *const c_char, len: u64) {
     };
 
     // update explode
-    with_tls_mut!(G_EXPLODE, e, {
+    with_tls_mut!(G_EXPLODE, g, {
         //
-        e.upload_xml(xml_str);
+        g.upload_xml(xml_str);
     });
 }
 
@@ -43,8 +43,8 @@ pub extern "C" fn follow_ip(ip: *const c_char, len: u64) {
         }
     };
 
-    with_tls_mut!(G_EXPLODE, e, {
-        e.add_ip(ip_str);
+    with_tls_mut!(G_EXPLODE, g, {
+        g.add_ip(ip_str);
     });
 }
 
@@ -62,7 +62,7 @@ pub extern "C" fn filter_ip(ip: *const c_char, len: u64) {
         }
     };
 
-    with_tls_mut!(G_EXPLODE, e, {
-        e.filter_ip(ip_str);
+    with_tls_mut!(G_EXPLODE, g, {
+        g.filter_ip(ip_str);
     });
 }

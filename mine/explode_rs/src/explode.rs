@@ -3,6 +3,7 @@ use std::ops::Add;
 use std::time::SystemTime;
 
 use commlib::utils::rand_between;
+use db_access::MySqlAddr;
 
 use super::db_mine::DbMine;
 use super::mine_fetcher::MineFetcher;
@@ -76,6 +77,13 @@ impl Exlode {
     }
 
     ///
+    #[allow(dead_code)]
+    pub fn set_mine_url_by_db_addr(&mut self, db_addr: &MySqlAddr) {
+        self.db_mine.set_url_by_db_addr(db_addr);
+    }
+
+    ///
+    #[allow(dead_code)]
     pub fn update_mine_url(&mut self, url: &str) {
         self.db_mine.update_url(url)
     }

