@@ -33,6 +33,7 @@ roxmltree = { path = "../../libs/roxmltree" }
 serde_json = { path = "../../libs/json" }
 thread_local = { path = "../../libs/thread_local-rs" }
 commlib = { path = "../../libs/commlib" }
+db_access = { path = "../../libs/db_access-rs" }
 my_logger =  { path = "../../libs/my_logger-rs" }
 net_packet = { path = "../../libs/net_packet-rs" }
 
