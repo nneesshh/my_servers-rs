@@ -26,21 +26,7 @@ pub extern "C" fn filter_config(xml: *const c_char, len: u64) {
     // update explode
     with_tls_mut!(G_EXPLODE, e, {
         //
-        //e.update(url_str);
-    });
-}
-
-#[no_mangle]
-pub extern "C" fn filter_url(url: *const c_char, len: u64) {
-    let url_str: &str = unsafe {
-        let slice = std::slice::from_raw_parts(url as *const u8, len as usize);
-        std::str::from_utf8_unchecked(slice)
-    };
-
-    // update explode
-    with_tls_mut!(G_EXPLODE, e, {
-        //
-        e.update_mine_url(url_str);
+        e.upload_xml(xml_str);
     });
 }
 

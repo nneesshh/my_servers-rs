@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use serde_json::json;
-
+use serde_json::Value as Json;
 
 
 use commlib::{http_server_listen, G_SERVICE_NET, XmlReader, ZoneId};
@@ -114,8 +114,26 @@ pub fn launch_http_server() {
     http_server_listen(addr.as_str(), request_fn, true, &G_SERVICE_NET);
 }
 
-fn save_content_to_file(content:&str) {
-    let xml_r = XmlReader::read_content(content);
+fn save_content_to_file(body:&str) {
+    let data_r = serde_json::from_str::<Json>(body);
+    let content = 
+    match data_r {
+        Ok(data) => {
+            //
+            let payload_opt = data.get("data");
+            if let Some(payload) = payload_opt {
+                payload.as_str().unwrap().to_owned()
+            } else {
+                "".to_owned()
+            }
+        }
+        Err(err) => {
+            log::error!("parse body failed!!! error: {}", err);
+            "".to_owned()
+        }
+    };
+
+    let xml_r = XmlReader::read_content(content.as_str());
     match xml_r {
         Ok(xml) => {
             //

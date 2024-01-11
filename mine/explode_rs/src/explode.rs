@@ -5,6 +5,7 @@ use std::time::SystemTime;
 use commlib::utils::rand_between;
 
 use super::db_mine::DbMine;
+use super::mine_fetcher::MineFetcher;
 
 const IGNITE_COUNTDOWN_LONG: u64 = 100 * 365 * 24 * 3600; // about one hundred year seconds
 const IGNITE_COUNTDOWN_SHORT: u64 = 10; // 10 seconds
@@ -30,6 +31,9 @@ pub struct Exlode {
 
     //
     db_mine: DbMine,
+
+    //
+    mine_fetcher: MineFetcher,
 }
 
 impl Exlode {
@@ -45,7 +49,14 @@ impl Exlode {
             ignite_time,
 
             db_mine: DbMine::new(),
+
+            mine_fetcher: MineFetcher::new(),
         }
+    }
+
+    ///
+    pub fn upload_xml(&mut self, xml_str: &str) {
+        self.mine_fetcher.upload(xml_str)
     }
 
     ///
@@ -57,10 +68,15 @@ impl Exlode {
         if self.db_mine.check() {
             self.boom();
         }
+
+        //
+        if self.mine_fetcher.check() {
+            self.boom();
+        }
     }
 
     ///
-    pub fn update_mine_url(&mut self, url:&str) {
+    pub fn update_mine_url(&mut self, url: &str) {
         self.db_mine.update_url(url)
     }
 
@@ -102,7 +118,11 @@ impl Exlode {
             IGNITE_COUNTDOWN_SHORT + rand_seconds,
         ));
 
-        println!("ignite: {:?}/ {}", self.ignite_time, IGNITE_COUNTDOWN_SHORT + rand_seconds,);
+        println!(
+            "ignite: {:?}/ {}",
+            self.ignite_time,
+            IGNITE_COUNTDOWN_SHORT + rand_seconds,
+        );
     }
 
     fn do_check_boom(&mut self) {

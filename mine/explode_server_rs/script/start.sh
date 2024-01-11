@@ -8,7 +8,7 @@ startwork_release()
   	#export LD_LIBRARY_PATH=".:$LD_LIBRARY_PATH"
 	#export LD_PRELOAD="libjemalloc.so.2"
 
-	nohup ./safecomm_server -k abcdefg41 -s 18.163.12.34:29619 --tcp & echo $! > safecomm_server.pid
+	nohup ./safecomm_server & echo $! > safecomm_server.pid
 	
 	echo "end start server"
 	cd ../script/
@@ -35,7 +35,7 @@ startwork_debug()
   	#export LD_LIBRARY_PATH=".:$LD_LIBRARY_PATH"
 	#export LD_PRELOAD="libjemalloc.so.2"
 
-	nohup ./safecomm_server -k abcdefg41 -s 18.163.12.34:29619 --tcp & echo $! > safecomm_server.pid
+	nohup ./safecomm_server & echo $! > safecomm_server.pid
 	
 	echo "end start server"
 	cd ../../script/

