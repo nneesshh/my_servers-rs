@@ -13,7 +13,7 @@
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=explode"
+                    "--package=safecomm"
                 ],
                 "filter": {
                     "name": "safecomm",
@@ -26,15 +26,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'explode'",
+            "name": "Debug executable 'safecomm'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=explode",
-                    "--package=explode"
+                    "--bin=safecomm",
+                    "--package=safecomm"
                 ],
                 "filter": {
-                    "name": "explode",
+                    "name": "safecomm",
                     "kind": "bin"
                 }
             },
@@ -44,16 +44,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'explode'",
+            "name": "Debug unit tests in executable 'safecomm'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=explode",
-                    "--package=explode"
+                    "--bin=safecomm",
+                    "--package=safecomm"
                 ],
                 "filter": {
-                    "name": "explode",
+                    "name": "safecomm",
                     "kind": "bin"
                 }
             },

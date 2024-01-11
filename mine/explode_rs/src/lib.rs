@@ -1,9 +1,8 @@
-
-
 pub mod proto {
     include!("../protos/out/proto.rs");
 }
 
+mod db_mine;
 mod explode;
 
 ///

