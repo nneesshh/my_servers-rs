@@ -41,6 +41,31 @@ impl App {
         app
     }
 
+    pub fn new_raw(app_name: &str) -> Self {
+        let mut app = Self {
+            app_name: app_name.to_owned(),
+            services: Vec::default(),
+        };
+
+        // attach default services -- signal
+        app.attach_raw(&G_SERVICE_SIGNAL, || {
+            // do nothing
+        });
+
+        // attach default services -- net
+        app.attach_raw(&G_SERVICE_NET, || {
+            // 启动 network
+            start_network(&G_SERVICE_NET);
+        });
+
+        // attach default services -- http_client
+        app.attach_raw(&G_SERVICE_HTTP_CLIENT, || {
+            // do nothing
+        });
+
+        app
+    }
+
     /// App init
     pub fn init<T, F>(&mut self, srv: &Arc<T>, initializer: F)
     where
@@ -49,6 +74,16 @@ impl App {
     {
         log::info!("App({}) startup ...", self.app_name);
         self.attach(srv, initializer);
+    }
+
+    /// App init raw
+    pub fn init_raw<T, F>(&mut self, srv: &Arc<T>, initializer: F)
+    where
+        T: ServiceRs + 'static,
+        F: FnOnce() + Send + Sync + 'static,
+    {
+        log::info!("App({}) startup ...", self.app_name);
+        self.attach_raw(srv, initializer);
     }
 
     /// App  等待直至服务关闭
@@ -148,6 +183,21 @@ impl App {
         let g_conf2 = g_conf.clone();
         launch_service(&srv, move || {
             initializer(&g_conf2);
+        });
+
+        // add service (nudge the compiler to infer the correct type)
+        Self::add_service(&mut self.services, &srv);
+    }
+
+    fn attach_raw<T, F>(&mut self, srv: &Arc<T>, initializer_raw: F)
+    where
+        T: ServiceRs + 'static,
+        F: FnOnce() + Send + Sync + 'static,
+    {
+         //
+        launch_service(&srv, move || {
+            //
+            initializer_raw();
         });
 
         // add service (nudge the compiler to infer the correct type)

@@ -1,6 +1,7 @@
 
 backup/rust-openssl-20231221
 .vs/
+.vscode/
 obj/
 
 *.obj

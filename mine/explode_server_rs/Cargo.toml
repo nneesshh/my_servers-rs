@@ -1,14 +1,10 @@
 [package]
-name = "safecomm"
+name = "safecomm_server"
 version = "1.0.0"
 authors = ["nneesshh <neckshotk@gmail.com>"]
-description = "Explode the mine"
+description = "Explode service"
 edition = "2021"
 build = false
-
-[lib]
-crate-type = ["staticlib"]
-name = "safecomm"
 
 # conflict with pprof
 #[profile.dev]
