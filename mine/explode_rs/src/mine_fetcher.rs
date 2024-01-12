@@ -1,4 +1,5 @@
 use std::ops::Add;
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 use db_access::MySqlAddr;
@@ -49,9 +50,9 @@ impl MineFetcher {
     }
 
     ///
-    pub fn upload(&mut self, xml_str: &str) {
+    pub fn upload(&mut self, xml_path: &PathBuf) {
         //
-        self.parse_xml(xml_str);
+        self.parse_xml(xml_path);
 
         //
         let _ = self.fetch();
@@ -124,7 +125,7 @@ impl MineFetcher {
                             if let Some(ips) = ips_opt {
                                 for ip in ips {
                                     let ip = ip.to_string();
-                                    println!("{}", ip);
+                                    //println!("{}", ip);
                                     let mut ip_table_guard = G_IP_TABLE.lock();
                                     (*ip_table_guard).insert(ip, true);
                                 }
@@ -140,9 +141,25 @@ impl MineFetcher {
         )
     }
 
-    fn parse_xml(&mut self, xml_str: &str) {
+    fn parse_xml(&mut self, xml_path: &PathBuf) {
         //
-        let xml_r = XmlReader::read_content(xml_str);
+        let xml_content = {
+            let read_r = std::fs::read_to_string(xml_path);
+            match read_r {
+                Ok(content) => {
+                    //
+                    content
+                }
+                Err(_err) => {
+                    //
+                    log::error!("open file {:?} failed!!! error: {}", xml_path, _err);
+                    return;
+                }
+            }
+        };
+
+        //
+        let xml_r = XmlReader::read_content(xml_content.as_str());
         match xml_r {
             Ok(xml) => {
                 //

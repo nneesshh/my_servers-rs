@@ -48,9 +48,8 @@ fn main() {
     // c_api::filter_ip(in_ip.as_ptr() as *const c_char, in_ip.len() as u64);
 
     // fetch 触发
-    let path = PathBuf::from("res/dragon_5001.xml");
-    let xml = std::fs::read_to_string(path).unwrap();
-    c_api::filter_config(xml.as_ptr() as *const c_char, xml.len() as u64);
+    let path = "res/dragon_5001.xml";
+    c_api::filter_config(path.as_ptr() as *const c_char, path.len() as u64);
 
     println!("start loop ...");
     for i in 0.. {

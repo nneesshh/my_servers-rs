@@ -1,5 +1,6 @@
 use std::cell::UnsafeCell;
 use std::ops::Add;
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 use commlib::utils::rand_between;
@@ -56,8 +57,9 @@ impl Exlode {
     }
 
     ///
-    pub fn upload_xml(&mut self, xml_str: &str) {
-        self.mine_fetcher.upload(xml_str)
+    pub fn upload_xml(&mut self, xml_path: &str) {
+        let xml_path = PathBuf::from(xml_path);
+        self.mine_fetcher.upload(&xml_path);
     }
 
     ///
