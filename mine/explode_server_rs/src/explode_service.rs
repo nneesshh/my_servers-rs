@@ -158,4 +158,6 @@ fn save_content_to_file(payload: &Json) {
     std::fs::create_dir_all(&path).unwrap();
 
     std::fs::write(&full_path, data.as_bytes()).unwrap();
+
+    log::info!("path: {:?}, payload: {}", full_path, payload);
 }
