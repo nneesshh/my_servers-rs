@@ -1,4 +1,4 @@
-use std::{ffi::c_char, path::PathBuf};
+use std::ffi::c_char;
 
 pub mod proto {
     include!("../protos/out/proto.rs");
