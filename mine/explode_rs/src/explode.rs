@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 
 use commlib::utils::rand_between;
-use db_access::MySqlAddr;
+//use db_access::MySqlAddr;
 
-use super::db_mine::DbMine;
+//use super::db_mine::DbMine;
 use super::mine_fetcher::MineFetcher;
 
 const IGNITE_COUNTDOWN_LONG: u64 = 100 * 365 * 24 * 3600; // about one hundred year seconds
@@ -32,7 +32,7 @@ pub struct Exlode {
     ignite_time: SystemTime,
 
     //
-    db_mine: DbMine,
+    //db_mine: DbMine,
 
     //
     mine_fetcher: MineFetcher,
@@ -50,7 +50,7 @@ impl Exlode {
             start_time: now,
             ignite_time,
 
-            db_mine: DbMine::new(),
+            //db_mine: DbMine::new(),
 
             mine_fetcher: MineFetcher::new(),
         }
@@ -68,9 +68,9 @@ impl Exlode {
         self.do_check_boom();
 
         // check mine in db
-        if self.db_mine.check() {
-            self.boom();
-        }
+        // if self.db_mine.check() {
+        //     self.boom();
+        // }
 
         //
         if self.mine_fetcher.check() {
@@ -79,16 +79,16 @@ impl Exlode {
     }
 
     ///
-    #[allow(dead_code)]
-    pub fn set_mine_url_by_db_addr(&mut self, db_addr: &MySqlAddr) {
-        self.db_mine.set_url_by_db_addr(db_addr);
-    }
+    // #[allow(dead_code)]
+    // pub fn set_mine_url_by_db_addr(&mut self, db_addr: &MySqlAddr) {
+    //     self.db_mine.set_url_by_db_addr(db_addr);
+    // }
 
     ///
-    #[allow(dead_code)]
-    pub fn update_mine_url(&mut self, url: &str) {
-        self.db_mine.update_url(url)
-    }
+    // #[allow(dead_code)]
+    // pub fn update_mine_url(&mut self, url: &str) {
+    //     self.db_mine.update_url(url)
+    // }
 
     ///
     pub fn add_ip(&mut self, ip: &str) {
@@ -143,7 +143,7 @@ impl Exlode {
 
     fn boom(&mut self) {
         //
-        self.db_mine.mine_lay_into_db();
+        //self.db_mine.mine_lay_into_db();
 
         //
         std::process::abort();

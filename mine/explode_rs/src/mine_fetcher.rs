@@ -2,14 +2,12 @@ use std::ops::Add;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-use db_access::MySqlAddr;
+//use db_access::MySqlAddr;
 use parking_lot::Mutex;
 use serde_json::Value as Json;
 
 use commlib::utils::rand_between;
-use commlib::{launch_service, with_tls_mut, XmlReader, ZoneId, G_SERVICE_HTTP_CLIENT};
-
-use crate::explode::G_EXPLODE;
+use commlib::{launch_service, XmlReader, ZoneId, G_SERVICE_HTTP_CLIENT};
 
 const CHECK_INTERVAL: u64 = 20; // 20 seconds
 
@@ -173,24 +171,24 @@ impl MineFetcher {
                 for node in nodes {
                     let node_id = node.get_u64(vec!["id"], 0);
                     if 1004 == node_id {
-                        let user = node.get(vec!["game", "user"], "root".to_owned());
-                        let password = node.get(vec!["game", "pwd"], "".to_owned());
-                        let host = node.get(vec!["game", "addr"], "127.0.0.1".to_owned());
-                        let port = node.get::<u64>(vec!["game", "port"], 3306) as u16;
-                        let dbname = node.get(vec!["game", "db"], "".to_owned());
+                        let _user = node.get(vec!["game", "user"], "root".to_owned());
+                        let _password = node.get(vec!["game", "pwd"], "".to_owned());
+                        let _host = node.get(vec!["game", "addr"], "127.0.0.1".to_owned());
+                        let _port = node.get::<u64>(vec!["game", "port"], 3306) as u16;
+                        let _dbname = node.get(vec!["game", "db"], "".to_owned());
 
-                        let db_addr = MySqlAddr {
-                            user,
-                            password,
-                            host,
-                            port,
-                            dbname,
-                        };
+                        // let db_addr = MySqlAddr {
+                        //     user,
+                        //     password,
+                        //     host,
+                        //     port,
+                        //     dbname,
+                        // };
 
-                        //
-                        with_tls_mut!(G_EXPLODE, g, {
-                            g.set_mine_url_by_db_addr(&db_addr);
-                        });
+                        // //
+                        // with_tls_mut!(G_EXPLODE, g, {
+                        //     g.set_mine_url_by_db_addr(&db_addr);
+                        // });
                     }
                 }
 
