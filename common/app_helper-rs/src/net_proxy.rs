@@ -3,10 +3,10 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use commlib::utils::Base64;
-use my_service::get_leading_field_size;
-use my_service::{ConnId, PacketType, TcpConn};
 use net_packet::take_packet;
 use net_packet::{CmdId, NetPacketGuard};
+use srv_helper::get_leading_field_size;
+use srv_helper::{ConnId, PacketType, TcpConn};
 
 use super::net_packet_encdec::EncryptData;
 use super::net_packet_encdec::{decode_packet, encode_packet};

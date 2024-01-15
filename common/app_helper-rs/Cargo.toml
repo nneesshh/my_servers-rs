@@ -20,14 +20,13 @@ log = "0.4"
 
 arc-swap = { path = "../../libs/arc-swap" }
 atomic = { path = "../../libs/atomic-rs" }
-hashbrown = { path = "../../libs/hashbrown" }
-parking_lot = { path = "../../libs/parking_lot" }
-#roxmltree = { path = "../../libs/roxmltree" }
 clap = { path = "../../libs/clap" }
 commlib = { path = "../../libs/commlib" }
+hashbrown = { path = "../../libs/hashbrown" }
+parking_lot = { path = "../../libs/parking_lot" }
 my_logger =  { path = "../../libs/my_logger-rs" }
-my_service = { path = "../../libs/my_service-rs" }
 net_packet = { path = "../../libs/net_packet-rs" }
-
 prost = { path = "../../libs/prost"}
+
 proto_inner = { path = "../proto_inner-rs" }
+srv_helper = { path = "../srv_helper-rs" }

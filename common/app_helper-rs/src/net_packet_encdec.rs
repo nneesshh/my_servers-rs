@@ -3,8 +3,8 @@ use std::collections::LinkedList;
 use net_packet::NetPacketGuard;
 
 use commlib::utils::rand_between_exclusive_i8;
-use my_service::{ConnId, PacketType};
-use my_service::{FROM_CLIENT_PKT_LEADING_FIELD_SIZE, PKT_LEADING_FIELD_SIZE_DEFAULT};
+use srv_helper::{ConnId, PacketType};
+use srv_helper::{FROM_CLIENT_PKT_LEADING_FIELD_SIZE, PKT_LEADING_FIELD_SIZE_DEFAULT};
 
 /// 4字节包体前导长度字段 + 2字节协议号 :
 ///     leading(full_len)(4) + cmd(2)

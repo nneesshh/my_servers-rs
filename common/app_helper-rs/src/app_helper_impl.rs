@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use my_service::{launch_service, start_network};
-use my_service::{NodeState, ServiceRs};
-use my_service::{G_EXIT_CV, G_SERVICE_HTTP_CLIENT, G_SERVICE_NET, G_SERVICE_SIGNAL};
+use srv_helper::{launch_service, start_network};
+use srv_helper::{NodeState, ServiceRs};
+use srv_helper::{G_EXIT_CV, G_SERVICE_HTTP_CLIENT, G_SERVICE_NET, G_SERVICE_SIGNAL};
 
 use crate::conf::Conf;
 use crate::G_CONF;

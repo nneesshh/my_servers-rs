@@ -6,7 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use commlib::utils::string_to_value;
 use commlib::{NodeId, SpecialZone, ZoneId};
-use my_service::{
+use srv_helper::{
     connect_to_redis, redis, RedisClient, RedisReply, RedisReplyType, ServiceNetRs, ServiceRs,
 };
 

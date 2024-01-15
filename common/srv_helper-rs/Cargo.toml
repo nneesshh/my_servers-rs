@@ -1,0 +1,43 @@
+[package]
+name = "srv_helper"
+version = "1.0.0"
+authors = ["nneesshh <neckshotk@gmail.com>"]
+description = "Common library for Rust projects"
+documentation = ""
+homepage = ""
+keywords = ["service", "signal"]
+categories = ["os"]
+license = "MIT/Apache-2.0"
+repository = ""
+exclude = ["/.travis.yml", "/appveyor.yml"]
+edition = "2021"
+readme = "README.md"
+
+[dependencies]
+chrono = "0.4"
+crossbeam-channel = "0.5"
+lazy_static = "1"
+libc = "0.2"
+log = "0.4"
+paste = "1"
+ring = "0.17"
+uuid = { version = "1", features = ["v4"]}
+
+atomic = { path = "../../libs/atomic-rs" }
+bytemuck = { path = "../../libs/bytemuck", features = ["derive"] }
+curl = { path = "../../libs/curl-rust" }
+hashbrown = { path = "../../libs/hashbrown" }
+http = { path = "../../libs/http" }
+httparse = { path = "../../libs/httparse" }
+message-io = { path = "../../libs/message-io" }
+my_logger = { path = "../../libs/my_logger-rs" }
+parking_lot = { path = "../../libs/parking_lot" }
+pinky-swear = { path = "../../libs/pinky-swear" }
+thread_local = { path = "../../libs/thread_local-rs" }
+
+commlib = { path = "../../libs/commlib" }
+commlib-sys = { path = "../../libs/commlib-sys" }
+net_packet = { path = "../../libs/net_packet-rs" }
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["minwindef", "windef", "consoleapi", "winuser", "errhandlingapi", "libloaderapi", "winbase", "winsock2", "ws2def", "ws2ipdef", "ws2tcpip"] }
