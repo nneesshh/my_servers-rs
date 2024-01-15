@@ -6,7 +6,8 @@ use hashbrown::HashMap;
 use net_packet::CmdId;
 use prost::Message as ProstMessage;
 
-use commlib::{ConnId, NodeId, TcpConn};
+use commlib::NodeId;
+use my_service::{ConnId, TcpConn};
 
 use super::NetProxy;
 
@@ -458,7 +459,7 @@ fn regitser_packet_handler(net_proxy: &mut NetProxy, cluster: &Rc<RefCell<Cluste
 mod tests {
     use std::sync::Arc;
 
-    use commlib::{ConnId, PacketType, TcpConn};
+    use my_service::{ConnId, PacketType, TcpConn};
     use net_packet::{take_small_packet, CmdId};
     use prost::Message as ProstMessage;
 

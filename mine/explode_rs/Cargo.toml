@@ -32,6 +32,7 @@ serde_json = { path = "../../libs/json" }
 thread_local = { path = "../../libs/thread_local-rs" }
 commlib = { path = "../../libs/commlib" }
 my_logger =  { path = "../../libs/my_logger-rs" }
+my_service = { path = "../../libs/my_service-rs" }
 
 #[dev-dependencies]
 #[build-dependencies]

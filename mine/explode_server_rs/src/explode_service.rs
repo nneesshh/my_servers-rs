@@ -8,8 +8,8 @@ use std::sync::Arc;
 use serde_json::json;
 use serde_json::Value as Json;
 
-use commlib::{http_server_listen, G_SERVICE_NET};
-use commlib::{NodeState, ServiceHandle, ServiceRs, TcpConn};
+use my_service::{http_server_listen, G_SERVICE_NET};
+use my_service::{NodeState, ServiceHandle, ServiceRs, TcpConn};
 
 ///
 pub const SERVICE_ID_EXLODE_SERVICE: u64 = 20001_u64;
@@ -132,7 +132,7 @@ pub fn launch_http_server() {
     };
 
     let addr = std::format!("0.0.0.0:{}", HTTP_PORT);
-    http_server_listen(addr.as_str(), request_fn, false, &G_SERVICE_NET);
+    http_server_listen(addr.as_str(), request_fn, &G_SERVICE_NET);
 }
 
 fn save_content_to_file(payload: &Json) {

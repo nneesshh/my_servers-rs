@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use commlib::{launch_service, start_network};
-use commlib::{NodeState, ServiceRs};
-use commlib::{G_EXIT_CV, G_SERVICE_HTTP_CLIENT, G_SERVICE_NET, G_SERVICE_SIGNAL};
+use my_service::{launch_service, start_network};
+use my_service::{NodeState, ServiceRs};
+use my_service::{G_EXIT_CV, G_SERVICE_HTTP_CLIENT, G_SERVICE_NET, G_SERVICE_SIGNAL};
 
 use crate::conf::Conf;
 use crate::G_CONF;
@@ -194,7 +194,7 @@ impl App {
         T: ServiceRs + 'static,
         F: FnOnce() + Send + Sync + 'static,
     {
-         //
+        //
         launch_service(&srv, move || {
             //
             initializer_raw();

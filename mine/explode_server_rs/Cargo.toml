@@ -31,13 +31,11 @@ thread_local = { path = "../../libs/thread_local-rs" }
 commlib = { path = "../../libs/commlib" }
 db_access = { path = "../../libs/db_access-rs" }
 my_logger =  { path = "../../libs/my_logger-rs" }
+my_service =  { path = "../../libs/my_service-rs" }
 net_packet = { path = "../../libs/net_packet-rs" }
 
 app_helper = { path = "../../common/app_helper-rs" }
 proto = { path = "../../common/proto-rs" }
-
-[target.'cfg(unix)'.dependencies]
-pprof = { path = "../../libs/pprof-rs", features = ["flamegraph"] }
 
 #[dev-dependencies]
 #[build-dependencies]

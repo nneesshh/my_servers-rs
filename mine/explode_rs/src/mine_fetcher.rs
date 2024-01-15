@@ -7,7 +7,8 @@ use parking_lot::Mutex;
 use serde_json::Value as Json;
 
 use commlib::utils::rand_between;
-use commlib::{launch_service, XmlReader, ZoneId, G_SERVICE_HTTP_CLIENT};
+use commlib::{XmlReader, ZoneId};
+use my_service::{launch_service, G_SERVICE_HTTP_CLIENT};
 
 const CHECK_INTERVAL: u64 = 100; // 100 seconds
 
