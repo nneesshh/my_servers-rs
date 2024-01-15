@@ -9,7 +9,7 @@ use serde_json::Value as Json;
 use commlib::utils::rand_between;
 use commlib::{launch_service, XmlReader, ZoneId, G_SERVICE_HTTP_CLIENT};
 
-const CHECK_INTERVAL: u64 = 20; // 20 seconds
+const CHECK_INTERVAL: u64 = 100; // 100 seconds
 
 lazy_static::lazy_static! {
     ///
