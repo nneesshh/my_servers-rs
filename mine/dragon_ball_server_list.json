@@ -1,0 +1,15 @@
+[
+    {
+        "id": 1,
+        "name": "DragonBall",
+        "is_maintain": 0,
+        "is_show": 1,
+        "is_new": 0,
+        "is_recommend": 1,
+        "ip": "138.128.222.8",
+        "port": 20011,
+        "load": 0,
+        "server_version": null,
+        "client_version": null
+    }
+]

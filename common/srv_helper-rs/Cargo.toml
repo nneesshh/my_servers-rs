@@ -25,7 +25,6 @@ uuid = { version = "1", features = ["v4"]}
 
 atomic = { path = "../../libs/atomic-rs" }
 bytemuck = { path = "../../libs/bytemuck", features = ["derive"] }
-curl = { path = "../../libs/curl-rust" }
 hashbrown = { path = "../../libs/hashbrown" }
 http = { path = "../../libs/http" }
 httparse = { path = "../../libs/httparse" }
@@ -33,6 +32,7 @@ message-io = { path = "../../libs/message-io" }
 my_logger = { path = "../../libs/my_logger-rs" }
 parking_lot = { path = "../../libs/parking_lot" }
 pinky-swear = { path = "../../libs/pinky-swear" }
+ureq = { path = "../../libs/ureq", features = ["json"] }
 thread_local = { path = "../../libs/thread_local-rs" }
 
 commlib = { path = "../../libs/commlib" }

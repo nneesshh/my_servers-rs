@@ -8,9 +8,9 @@ use std::cell::UnsafeCell;
 use std::collections::VecDeque;
 use std::mem;
 use std::sync::Arc;
+use std::time::Duration;
 
-use curl::easy::{Easy as CurlEasy, List as CurlList};
-use curl::multi::{EasyHandle, Multi as CurlMulti};
+use ureq::{Agent, AgentBuilder};
 
 use commlib::with_tls_mut;
 
@@ -48,15 +48,19 @@ impl CurlPayloadStorage {
 ///
 pub struct HttpClient {
     request_queue: VecDeque<HttpRequest>,
-    multi_handler: CurlMulti,
+    agent: Agent,
 }
 
 impl HttpClient {
     ///
     pub fn new() -> Self {
+        let builder = ureq::AgentBuilder::new()
+        .timeout_read(Duration::from_secs(5))
+        .timeout_write(Duration::from_secs(5));
+
         Self {
             request_queue: VecDeque::with_capacity(64),
-            multi_handler: CurlMulti::new(),
+            agent:  builder.build()
         }
     }
 
@@ -81,26 +85,50 @@ impl HttpClient {
                 //
                 let context = Arc::new(RwLock::new(HttpContext::new(req)));
 
-                // 设置 easy
-                let mut easy = CurlEasy::new();
-                configure_easy(&context, &mut easy).unwrap();
+                let ll_req = self.agent.post(req.url.as_str());
+                if let Some(data) = req.data_opt {
+                    let resp_r = ll_req
+                    .set("Content-Type", "application/json")
+                    .send_string(req.data_opt);
 
-                // easy 交给 multi_handler 处理, 返回 easy_handle
-                let mut easy_handle = self.multi_handler.add(easy).unwrap();
+                    //
+                    {
+                        let mut guard = context.write();
+                        match resp_r{
+                            Ok(resp) => {
+                                //
+                                let mut guard = context.write();
+                                guard.response.succeed = true;
+                                guard.response.response_code = resp.status();
+                                
+                                // for header in resp.headers_names() {
+                                //     guard.response.response_headers.push(header);
+                                // }
 
-                // easy_handle <-- token
-                let token = NEXT_TOKEN_ID.fetch_add(1, Ordering::Relaxed);
-                easy_handle.set_token(token).unwrap();
+                                //
+                                // match resp.into_string() {
+                                //     Ok(body) => {
+                                //         //
+                                //         guard.response.response_rawdata = body;
+                                //     }
+                                //     Err(err) => {
+                                //         //
+                                //         log::error!("http_client run_loop body error: {}!!! body size overflow?!!!", err );
+                                //         guard.response.error_buffer = err.to_string();
+                                //     }
+                                // }
 
-                // insert easy_handle
-                insert_curl_payload(
-                    srv_http_cli,
-                    token,
-                    CurlPayload {
-                        easy_handle,
-                        context,
-                    },
-                );
+                                //
+                                req.request_cb(&context);
+                            }
+                            Err(err) => {
+                                //
+                                log::error!("http_client run_loop error: {}", err );
+                                        guard.response.error_buffer = err.to_string();
+                            }
+                        }
+                    }
+                }
             } else {
                 break;
             }
@@ -108,76 +136,6 @@ impl HttpClient {
             //
             count += 1;
         }
-
-        // perform
-        loop {
-            //
-            match self.multi_handler.perform() {
-                Ok(num) => {
-                    if num > 0 {
-                        self.multi_handler
-                            .wait(&mut [], std::time::Duration::from_millis(100))
-                            .unwrap();
-                    } else {
-                        //
-                        break;
-                    }
-                }
-                Err(multi_error) => {
-                    // CURLM_CALL_MULTI_PERFORM 需要 perform again
-                    if !multi_error.is_call_perform() {
-                        //
-                        break;
-                    }
-                }
-            }
-        }
-
-        // response
-        self.multi_handler.messages(|msg| {
-            // token
-            let token = msg.token().unwrap();
-
-            // 根据 token 查找 payload
-            let payload_opt = remove_curl_payload(srv_http_cli, token);
-            if let Some(mut payload) = payload_opt {
-                //
-                let easy_handle = &mut payload.easy_handle;
-                let mut context_mut = payload.context.write();
-
-                let msg_result_opt = msg.result_for(&easy_handle);
-                if let Some(msg_result) = msg_result_opt {
-                    //
-                    match msg_result {
-                        Ok(()) => {
-                            // resp code == 200 成功
-                            let resp_code = easy_handle.response_code().unwrap();
-                            if resp_code == 200 {
-                                // success
-                                context_mut.response.response_code = resp_code;
-                                context_mut.response.succeed = true;
-
-                                //
-                                let request_cb = context_mut.request.request_cb.clone();
-                                (*request_cb)(&mut context_mut);
-                            }
-                        }
-                        Err(error) => {
-                            //
-                            log::error!("multi_handler message failed!!! error:{error}!!!");
-                        }
-                    }
-                } else {
-                    //
-                    log::error!("multi_handler message failed!!! msg handle not valid!!!");
-                }
-            } else {
-                log::error!(
-                    "multi_handler message failed!!! invalid token: {}!!!",
-                    token
-                );
-            }
-        });
     }
 
     #[inline(always)]
@@ -260,129 +218,6 @@ pub fn http_client_post<F>(
     });
 }
 
-fn configure_easy(
-    context: &Arc<RwLock<HttpContext>>,
-    easy: &mut CurlEasy,
-) -> Result<(), curl::Error> {
-    //
-    let context_ = context.read();
-    let req = &context_.request;
-
-    // configure timeout, ssl verify, signal ...
-    {
-        easy.timeout(std::time::Duration::from_secs(30))?;
-        easy.connect_timeout(std::time::Duration::from_secs(10))?;
-        easy.ssl_verify_peer(true)?;
-        easy.ssl_verify_host(true)?;
-        easy.signal(false)?; // NOTICE: timeouts during name resolution will not work unless libcurl is built against c-ares
-    }
-
-    // 设置 headers
-    if !req.headers.is_empty() {
-        let mut header_list = CurlList::new();
-        for header in &req.headers {
-            header_list.append(header.as_str())?;
-        }
-        easy.http_headers(header_list)?;
-    }
-
-    // 设置 url
-    easy.url(req.url.as_str())?;
-
-    //
-    match req.r#type {
-        HttpRequestType::GET => {
-            easy.follow_location(true)?;
-            easy.custom_request("GET")?;
-            easy.get(true)?;
-        }
-        HttpRequestType::POST => {
-            easy.custom_request("POST")?;
-            easy.post(true)?;
-
-            if let Some(data) = req.data_opt.as_ref() {
-                easy.post_field_size(data.len() as u64)?;
-                easy.post_fields_copy(data.as_bytes())?;
-            }
-        }
-        HttpRequestType::PUT => {
-            easy.custom_request("PUT")?;
-            easy.put(true)?;
-
-            if let Some(data) = req.data_opt.as_ref() {
-                easy.post_field_size(data.len() as u64)?;
-                easy.post_fields_copy(data.as_bytes())?;
-            }
-        }
-        HttpRequestType::DEL => {
-            easy.custom_request("DELETE")?;
-            easy.follow_location(true)?;
-        }
-        HttpRequestType::UNKNOWN => {
-            //
-            log::error!("unkonwn http request type:{}", req.r#type as u8);
-        }
-    }
-
-    // 设置 write callback（回调函数会被多次调用）
-    let context2 = context.clone();
-    easy.write_function(move |data: &[u8]| {
-        //
-        let s = unsafe { std::str::from_utf8_unchecked(data.into()) };
-
-        //
-        {
-            let mut context_mut = context2.write();
-            context_mut.response.response_rawdata.push_str(s);
-        }
-
-        //
-        Ok(data.len())
-    })?;
-
-    // 设置 header callback（回调函数会被多次调用）
-    let context2 = context.clone();
-    easy.header_function(move |data: &[u8]| {
-        //
-        let s = unsafe { std::str::from_utf8_unchecked(data.into()) };
-
-        //
-        {
-            let mut context_mut = context2.write();
-            context_mut.response.response_headers.push(s.to_owned());
-        }
-
-        //
-        true
-    })?;
-
-    //
-    Ok(())
-}
-
-fn insert_curl_payload(
-    srv_http_cli: &ServiceHttpClientRs,
-    token: usize,
-    curl_payload: CurlPayload,
-) {
-    // 运行于 srv_http_cli 线程
-    assert!(srv_http_cli.is_in_service_thread());
-
-    with_tls_mut!(G_CURL_PAYLOAD_STORAGE, g, {
-        log::info!("insert_curl_payload token: {}", token);
-        g.payload_table.insert(token, curl_payload);
-    });
-}
-
-fn remove_curl_payload(srv_http_cli: &ServiceHttpClientRs, token: usize) -> Option<CurlPayload> {
-    // 运行于 srv_http_cli 线程
-    assert!(srv_http_cli.is_in_service_thread());
-
-    with_tls_mut!(G_CURL_PAYLOAD_STORAGE, g, {
-        log::info!("remove_curl_payload token: {}", token);
-        g.payload_table.remove(&token)
-    })
-}
 
 #[cfg(test)]
 mod http_test {
