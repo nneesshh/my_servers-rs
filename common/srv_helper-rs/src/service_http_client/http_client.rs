@@ -16,33 +16,12 @@ use commlib::with_tls_mut;
 
 use crate::{ServiceHttpClientRs, ServiceRs};
 
-use super::{HttpContext, HttpRequest, HttpRequestType};
+use super::{HttpResponse, HttpRequest, HttpRequestType};
 
 static NEXT_TOKEN_ID: Atomic<usize> = Atomic::<usize>::new(1);
 
 thread_local! {
     static G_HTTP_CLIENT: UnsafeCell<HttpClient> = UnsafeCell::new(HttpClient::new());
-
-    static G_CURL_PAYLOAD_STORAGE: UnsafeCell<CurlPayloadStorage> = UnsafeCell::new(CurlPayloadStorage::new());
-}
-
-struct CurlPayload {
-    easy_handle: EasyHandle, // EasyHandle owns raw pointer, can send across thread
-    context: Arc<RwLock<HttpContext>>,
-}
-
-struct CurlPayloadStorage {
-    /// custom handle table
-    payload_table: hashbrown::HashMap<usize, CurlPayload>, // token 2 payload
-}
-
-impl CurlPayloadStorage {
-    ///
-    pub fn new() -> Self {
-        Self {
-            payload_table: hashbrown::HashMap::with_capacity(256),
-        }
-    }
 }
 
 ///
@@ -81,55 +60,57 @@ impl HttpClient {
         const MAX_REQUESTS: usize = 100_usize;
         let mut count = 0_usize;
         while count <= MAX_REQUESTS {
+            //
             if let Some(req) = self.request_queue.pop_front() {
-                //
-                let context = Arc::new(RwLock::new(HttpContext::new(req)));
-
+                // invoke ll_req with agent
                 let ll_req = self.agent.post(req.url.as_str());
                 if let Some(data) = req.data_opt {
-                    let resp_r = ll_req
-                    .set("Content-Type", "application/json")
-                    .send_string(req.data_opt);
+                    //
+                    let response = HttpResponse::new();
 
                     //
-                    {
-                        let mut guard = context.write();
-                        match resp_r{
-                            Ok(resp) => {
-                                //
-                                let mut guard = context.write();
-                                guard.response.succeed = true;
-                                guard.response.response_code = resp.status();
-                                
-                                // for header in resp.headers_names() {
-                                //     guard.response.response_headers.push(header);
-                                // }
-
-                                //
-                                // match resp.into_string() {
-                                //     Ok(body) => {
-                                //         //
-                                //         guard.response.response_rawdata = body;
-                                //     }
-                                //     Err(err) => {
-                                //         //
-                                //         log::error!("http_client run_loop body error: {}!!! body size overflow?!!!", err );
-                                //         guard.response.error_buffer = err.to_string();
-                                //     }
-                                // }
-
-                                //
-                                req.request_cb(&context);
+                    let ll_resp_r = ll_req
+                    .set("Content-Type", "application/json")
+                    .send_string(data.as_str());
+                    match ll_resp_r{
+                        Ok(ll_resp) => {
+                            //
+                            response.succeed = true;
+                            response.response_code = ll_resp.status() as u32;
+                            
+                            for header in ll_resp.headers_names() {
+                                response.response_headers.push(header);
                             }
-                            Err(err) => {
-                                //
-                                log::error!("http_client run_loop error: {}", err );
-                                        guard.response.error_buffer = err.to_string();
+
+                            //
+                            match ll_resp.into_string() {
+                                Ok(body) => {
+                                    //
+                                    response.response_rawdata = body;
+                                }
+                                Err(err) => {
+                                    //
+                                    log::error!("http_client run_loop body error: {}!!! body size overflow?!!!", err );
+                                    response.error_buffer = err.to_string();
+                                }
                             }
                         }
+                        Err(err) => {
+                            //
+                            log::error!("http_client run_loop error: {}", err );
+                            response.succeed = false;
+
+                            response.error_buffer = err.to_string();
+
+                                    
+                        }
                     }
+
+                     //
+                     (req.request_cb)(&mut response);
                 }
             } else {
+                // queue is empty, break
                 break;
             }
 
@@ -167,7 +148,7 @@ pub fn http_client_get<F>(
     // 运行于 srv_http_cli 线程
     assert!(srv_http_cli.is_in_service_thread());
 
-    let request_cb = move |context: &mut HttpContext| {
+    let request_cb = move |context: &mut HttpResponse| {
         //
         let resp_code = context.response.response_code;
         let resp_data = mem::replace(&mut context.response.response_rawdata, "".to_owned());
@@ -199,10 +180,10 @@ pub fn http_client_post<F>(
     // 运行于 srv_http_cli 线程
     assert!(srv_http_cli.is_in_service_thread());
 
-    let request_cb = move |context: &mut HttpContext| {
+    let request_cb = move |response: &mut HttpResponse| {
         //
-        let resp_code = context.response.response_code;
-        let resp_data = mem::replace(&mut context.response.response_rawdata, "".to_owned());
+        let resp_code = response.response_code;
+        let resp_data = mem::replace(&mut response.response_rawdata, "".to_owned());
         cb(resp_code, resp_data);
     };
     let req = HttpRequest {

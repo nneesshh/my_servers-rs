@@ -11,10 +11,6 @@ mod http_request;
 pub use http_request::{HttpRequest, HttpRequestType};
 
 ///
-mod http_context;
-pub use http_context::HttpContext;
-
-///
 mod http_client;
 pub use http_client::HttpClient;
 
