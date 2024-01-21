@@ -12,7 +12,6 @@ pub use http_request::{HttpRequest, HttpRequestType};
 
 ///
 mod http_client;
-pub use http_client::HttpClient;
 
 ///
 mod service_http_client_impl;

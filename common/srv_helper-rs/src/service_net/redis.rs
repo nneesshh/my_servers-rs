@@ -8,7 +8,7 @@ pub use redis_client::RedisClient;
 
 ///
 mod redis_client_manager;
-pub use redis_client_manager::{connect_to_redis, remove_redis_client};
+pub use redis_client_manager::connect_to_redis;
 
 ///
 mod redis_commander;

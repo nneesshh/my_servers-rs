@@ -26,7 +26,6 @@ pub use tcp_conn::TcpConn;
 
 ///
 mod tcp_conn_manager;
-pub use tcp_conn_manager::disconnect_connection;
 
 ///
 mod tcp_server;
@@ -45,7 +44,7 @@ pub use tcp_client::TcpClient;
 
 ///
 mod tcp_client_manager;
-pub use tcp_client_manager::{connect_to_tcp_server, remove_tcp_client};
+pub use tcp_client_manager::connect_to_tcp_server;
 
 ///
 mod server_status;
@@ -65,7 +64,6 @@ pub use dns_resolver::dns_resolve;
 
 ///
 mod low_level_network;
-pub use low_level_network::MessageIoNetwork;
 
 ///
 mod service_net_impl;
@@ -76,11 +74,10 @@ pub use service_net_impl::{start_network, stop_network};
 mod redis;
 pub use redis::cmds as redis_cmds;
 pub use redis::connect_to_redis;
-pub use redis::{RedisClient, RedisCommander, RedisReply, RedisReplyType};
+pub use redis::{RedisClient, RedisReply, RedisReplyType};
 
 ///
 mod http_server;
-pub use http_server::HttpServer;
 pub use http_server::{http_server_listen, parsing as http_parsing};
 
 ///

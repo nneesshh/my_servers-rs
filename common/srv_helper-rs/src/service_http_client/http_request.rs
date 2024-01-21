@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::HttpContext;
+use super::HttpResponse;
 
 ///
 #[derive(PartialEq, Copy, Clone)]
@@ -25,5 +25,5 @@ pub struct HttpRequest {
     pub data_opt: Option<String>, // used for POST
     pub headers: Vec<String>,     // custom http headers
 
-    pub request_cb: Arc<dyn Fn(&mut HttpContext) + Send + Sync>,
+    pub request_cb: Arc<dyn Fn(&mut HttpResponse) + Send + Sync>,
 }
