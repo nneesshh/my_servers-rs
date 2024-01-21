@@ -10,10 +10,9 @@ use std::sync::Arc;
 
 use net_packet::CmdId;
 
-use commlib::{ConnId, NodeState, PacketType, ServiceRs};
-use commlib::{G_SERVICE_NET, G_SERVICE_SIGNAL};
-
 use app_helper::NetProxy;
+use srv_helper::{ConnId, NodeState, PacketType, ServiceRs};
+use srv_helper::{G_SERVICE_NET, G_SERVICE_SIGNAL};
 
 use crate::proto;
 

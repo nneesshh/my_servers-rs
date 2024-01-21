@@ -1,5 +1,5 @@
 use app_helper::App;
-use commlib::ServiceRs;
+use srv_helper::ServiceRs;
 
 pub mod proto {
     include!("../../protos/out/proto.rs");

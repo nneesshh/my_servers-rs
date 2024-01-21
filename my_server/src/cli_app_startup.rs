@@ -14,10 +14,10 @@ use std::sync::Arc;
 use net_packet::NetPacketGuard;
 
 use commlib::with_tls;
-use commlib::{connect_to_tcp_server, G_SERVICE_NET};
-use commlib::{ConnId, ServiceRs, TcpConn};
 
 use app_helper::{conf::Conf, Startup};
+use srv_helper::{connect_to_tcp_server, G_SERVICE_NET};
+use srv_helper::{ConnId, ServiceRs, TcpConn};
 
 use super::cli_service::{CliService, G_CLI_SERVICE};
 use crate::cli_conf::G_CLI_CONF;

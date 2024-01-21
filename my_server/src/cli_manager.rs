@@ -8,11 +8,11 @@ use net_packet::CmdId;
 use prost::Message;
 
 use commlib::with_tls_mut;
-use commlib::{ConnId, NodeState, PacketType, ServiceRs, TcpConn};
-use commlib::{G_SERVICE_NET, G_SERVICE_SIGNAL};
 
 use app_helper::NetProxy;
 use app_helper::{ENCRYPT_KEY_LEN, ENCRYPT_MAX_LEN};
+use srv_helper::{ConnId, NodeState, PacketType, ServiceRs, TcpConn};
+use srv_helper::{G_SERVICE_NET, G_SERVICE_SIGNAL};
 
 use crate::proto;
 use crate::robot::{Robot, RobotManager, G_ROBOT_MANAGER};

@@ -4,9 +4,10 @@ use thread_local::ThreadLocal;
 
 use net_packet::CmdId;
 
-use commlib::{with_tls_mut, NodeId, ServiceNetRs, ServiceRs, SpecialZone, ZoneId};
+use commlib::{with_tls_mut, NodeId, SpecialZone, ZoneId};
 
 use app_helper::{Cluster, CrossStreamScheduler, NetProxy, RpcCall};
+use srv_helper::{ServiceNetRs, ServiceRs};
 
 use crate::proto;
 use prost::Message;

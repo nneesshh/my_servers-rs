@@ -6,11 +6,12 @@
 use std::io::Write;
 use std::sync::Arc;
 
-use commlib::{http_server_listen, G_SERVICE_NET, G_SERVICE_SIGNAL};
-use commlib::{Clock, NodeState, ServiceHandle, ServiceRs, TcpConn};
+use commlib::Clock;
 
 use app_helper::conf::Conf;
 use app_helper::G_CONF;
+use srv_helper::{http_server_listen, G_SERVICE_NET, G_SERVICE_SIGNAL};
+use srv_helper::{NodeState, ServiceHandle, ServiceRs, TcpConn};
 
 ///
 pub const SERVICE_ID_SIMPLE_SERVICE: u64 = 20001_u64;
@@ -69,8 +70,9 @@ impl ServiceRs for SimpleService {
     }
 }
 
-use commlib::G_SERVICE_HTTP_CLIENT;
 use serde_json::json;
+
+use srv_helper::G_SERVICE_HTTP_CLIENT;
 
 pub fn test_http_client(srv: &Arc<SimpleService>) {
     let body =
@@ -171,7 +173,7 @@ pub fn test_http_server(_conf: &Arc<Conf>) {
     };
 
     let addr = std::format!("0.0.0.0:{}", g_conf.http_port);
-    http_server_listen(addr.as_str(), request_fn, true, &G_SERVICE_NET);
+    http_server_listen(addr.as_str(), request_fn, &G_SERVICE_NET);
 
     /*#[cfg(unix)]
     let guard = pprof::ProfilerGuardBuilder::default()

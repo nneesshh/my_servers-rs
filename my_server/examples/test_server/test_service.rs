@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use commlib::{NodeState, ServiceHandle, ServiceRs};
+use srv_helper::{NodeState, ServiceHandle, ServiceRs};
 
 pub const SERVICE_ID_TEST_SERVICE: u64 = 10001_u64;
 lazy_static::lazy_static! {

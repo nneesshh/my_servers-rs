@@ -33,6 +33,7 @@ commlib = { path = "../libs/commlib" }
 my_logger =  { path = "../libs/my_logger-rs" }
 net_packet = { path = "../libs/net_packet-rs" }
 
+srv_helper = { path = "../common/srv_helper-rs" }
 app_helper = { path = "../common/app_helper-rs" }
 proto = { path = "../common/proto-rs" }
 
