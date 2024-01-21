@@ -19,6 +19,7 @@ paste = "1"
 log = "0.4"
 chrono = "0.4"
 bytes = "1"
+serde_json = "1"
 
 atomic = { path = "../libs/atomic-rs" }
 base64 = { path = "../libs/rust-base64" }
@@ -27,7 +28,6 @@ http = { path = "../libs/http" }
 parking_lot = { path = "../libs/parking_lot" }
 prost = { path = "../libs/prost"}
 roxmltree = { path = "../libs/roxmltree" }
-serde_json = { path = "../libs/json" }
 thread_local = { path = "../libs/thread_local-rs" }
 commlib = { path = "../libs/commlib" }
 my_logger =  { path = "../libs/my_logger-rs" }

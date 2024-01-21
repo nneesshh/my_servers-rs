@@ -14,6 +14,7 @@ fn main() -> miette::Result<()> {
         println!("==== build.rs: the C runtime will be dynamically linked ====");
     }
 
+
     // Other envs
     let profile = std::env::var("PROFILE").expect("PROFILE was not set");
     let target = std::env::var("TARGET").expect("TARGET was not set");
@@ -26,19 +27,24 @@ fn main() -> miette::Result<()> {
     // Protos
     #[cfg(feature="prost_style")]
     #[cfg(windows)]
-    tonic_build::configure()
-        .build_client(false)
-        .build_server(false)
-        .build_transport(false)
-        .out_dir("protos/out")
-        .compile(
-            &[
-                "protos/inner/commlib.proto",
-                "protos/inner/rpc.proto",
-            ],
-            &["protos"],
-        )
-        .unwrap();
+    {
+        let protoc_path = std::format!("{}\\tools\\protoc-25.2-win64\\bin\\protoc.exe", manifest_dir);
+        std::env::set_var("PROTOC", protoc_path);
+
+        tonic_build::configure()
+            .build_client(false)
+            .build_server(false)
+            .build_transport(false)
+            .out_dir("protos/out")
+            .compile(
+                &[
+                    "protos/inner/commlib.proto",
+                    "protos/inner/rpc.proto",
+                ],
+                &["protos"],
+            )
+            .unwrap();
+    }
 
     Ok(())
 }
