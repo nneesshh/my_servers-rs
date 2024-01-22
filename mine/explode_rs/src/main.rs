@@ -8,7 +8,7 @@ pub mod proto {
 mod explode;
 mod mine_fetcher;
 
-mod c_api;
+mod safe_api;
 
 fn main() {
     // panic hook
@@ -37,24 +37,23 @@ fn main() {
 
     for ip in &ips {
         //
-        let ip = *ip;
-        c_api::follow_ip(ip.as_ptr() as *const c_char, ip.len() as u64);
+        safe_api::follow_ip(*ip);
     }
 
     ips.push("localhost");
 
     // 登录触发
     // let in_ip = "127.0.0.1";
-    // c_api::filter_ip(in_ip.as_ptr() as *const c_char, in_ip.len() as u64);
+    // safe_api::filter_ip(in_ip.as_ptr() as *const c_char, in_ip.len() as u64);
 
     // fetch 触发
     let path = "res/dragon_5001.xml";
-    c_api::filter_config(path.as_ptr() as *const c_char, path.len() as u64);
+    safe_api::filter_config(path);
 
     println!("start loop ...");
     for i in 0.. {
         std::thread::sleep(std::time::Duration::from_millis(1000));
-        c_api::safe_loop();
+        safe_api::safe_loop();
         println!("safe_loo {}", i);
     }
     println!("loop over.");

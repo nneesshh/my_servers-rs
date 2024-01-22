@@ -12,9 +12,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rust\cxx.h" />
+    <ClInclude Include="rust\filter.rs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cc" />
+    <ClCompile Include="rust\filter.rs.cc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -90,7 +92,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>../../explode_rs/target/debug/safecomm.lib;ws2_32.lib;Bcrypt.lib;Userenv.lib;NtDll.lib;Crypt32.lib;Ncrypt.lib;Secur32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../explode_rs/target/release/safecomm.lib;ws2_32.lib;Bcrypt.lib;Userenv.lib;NtDll.lib;Crypt32.lib;Ncrypt.lib;Secur32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

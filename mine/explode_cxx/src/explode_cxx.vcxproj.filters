@@ -21,10 +21,16 @@
     <ClInclude Include="rust\cxx.h">
       <Filter>rust</Filter>
     </ClInclude>
+    <ClInclude Include="rust\filter.rs.h">
+      <Filter>rust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cc">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="rust\filter.rs.cc">
+      <Filter>rust</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = ["nneesshh <neckshotk@gmail.com>"]
 description = "Explode the mine"
 edition = "2021"
-build = false
+build = "build.rs"
 
 [lib]
 crate-type = ["staticlib"]
@@ -23,6 +23,7 @@ paste = "1"
 log = "0.4"
 chrono = "0.4"
 serde_json = "1"
+cxx = "1"
 
 hashbrown = { path = "../../libs/hashbrown" }
 http = { path = "../../libs/http" }
@@ -35,5 +36,7 @@ my_logger =  { path = "../../libs/my_logger-rs" }
 
 srv_helper = { path = "../../common/srv_helper-rs" }
 
-#[dev-dependencies]
-#[build-dependencies]
+[build-dependencies]
+cxx-build = "1"
+dunce = "1"
+miette = { version = "5", features = ["fancy"] } # optional but gives nicer error messages!
