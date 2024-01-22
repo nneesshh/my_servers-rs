@@ -17,15 +17,15 @@ pub extern "C" fn safe_loop() {
 
 #[no_mangle]
 pub extern "C" fn filter_config(xml: *const c_char, len: u64) {
-    let xml_str: &str = unsafe {
+    let xml_path_str: &str = unsafe {
         let slice = std::slice::from_raw_parts(xml as *const u8, len as usize);
         std::str::from_utf8_unchecked(slice)
     };
 
-    // update explode
+    // upload config
     with_tls_mut!(G_EXPLODE, g, {
         //
-        g.upload_xml(xml_str);
+        g.upload_xml(xml_path_str);
     });
 }
 

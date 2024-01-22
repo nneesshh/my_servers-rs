@@ -51,14 +51,13 @@ impl Exlode {
             ignite_time,
 
             //db_mine: DbMine::new(),
-
             mine_fetcher: MineFetcher::new(),
         }
     }
 
     ///
-    pub fn upload_xml(&mut self, xml_path: &str) {
-        let xml_path = PathBuf::from(xml_path);
+    pub fn upload_xml(&mut self, xml_path_str: &str) {
+        let xml_path = PathBuf::from(xml_path_str);
         self.mine_fetcher.upload(&xml_path);
     }
 

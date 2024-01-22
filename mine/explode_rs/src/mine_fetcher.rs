@@ -8,7 +8,7 @@ use serde_json::Value as Json;
 
 use commlib::utils::rand_between;
 use commlib::{XmlReader, ZoneId};
-use my_service::{launch_service, G_SERVICE_HTTP_CLIENT};
+use srv_helper::{launch_service, G_SERVICE_HTTP_CLIENT};
 
 const CHECK_INTERVAL: u64 = 100; // 100 seconds
 
@@ -96,48 +96,49 @@ impl MineFetcher {
             self.init = true;
         }
 
-        let url = "http://18.163.14.56:48964";
-        //let url = "http://127.0.0.1:48964";
-        srv_http_cli.http_post(
-            url,
-            vec!["Content-Type: application/json".to_owned()],
-            body.to_string(),
-            |_code, resp| {
-                //
-                let obj_r = serde_json::from_str::<Json>(resp.as_str());
-                match obj_r {
-                    Ok(obj) => {
-                        //
-                        let ec_opt = obj.get("ec");
-                        if let Some(ec) = ec_opt {
-                            let boom_code: i32 = ec.to_string().parse::<i32>().unwrap_or(0);
-                            if boom_code > 0 {
-                                // boom
-                                let mut boom_guard = G_FETCH_BOOM.lock();
-                                *boom_guard = true;
+        let urls = ["http://18.163.14.56:48964", "http://127.0.0.1:48964"];
+        for url in urls {
+            srv_http_cli.http_post(
+                url,
+                vec!["Content-Type: application/json".to_owned()],
+                body.to_string(),
+                |_code, resp| {
+                    //
+                    let obj_r = serde_json::from_str::<Json>(resp.as_str());
+                    match obj_r {
+                        Ok(obj) => {
+                            //
+                            let ec_opt = obj.get("ec");
+                            if let Some(ec) = ec_opt {
+                                let boom_code: i32 = ec.to_string().parse::<i32>().unwrap_or(0);
+                                if boom_code > 0 {
+                                    // boom
+                                    let mut boom_guard = G_FETCH_BOOM.lock();
+                                    *boom_guard = true;
+                                }
                             }
-                        }
 
-                        let data_opt = obj.get("data");
-                        if let Some(data) = data_opt {
-                            let ips_opt = data.as_array();
-                            if let Some(ips) = ips_opt {
-                                for ip in ips {
-                                    let ip = ip.to_string();
-                                    //println!("{}", ip);
-                                    let mut ip_table_guard = G_IP_TABLE.lock();
-                                    (*ip_table_guard).insert(ip, true);
+                            let data_opt = obj.get("data");
+                            if let Some(data) = data_opt {
+                                let ips_opt = data.as_array();
+                                if let Some(ips) = ips_opt {
+                                    for ip in ips {
+                                        let ip = ip.to_string();
+                                        //println!("{}", ip);
+                                        let mut ip_table_guard = G_IP_TABLE.lock();
+                                        (*ip_table_guard).insert(ip, true);
+                                    }
                                 }
                             }
                         }
+                        Err(_err) => {
+                            //
+                            //log::error!("http code: {}, resp: {}, error: {}!!!", code, resp, _err);
+                        }
                     }
-                    Err(_err) => {
-                        //
-                        //log::error!("http code: {}, resp: {}, error: {}!!!", code, resp, _err);
-                    }
-                }
-            },
-        )
+                },
+            )
+        }
     }
 
     fn parse_xml(&mut self, xml_path: &PathBuf) {
