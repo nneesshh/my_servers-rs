@@ -9,7 +9,10 @@ use commlib::utils::rand_between;
 //use super::db_mine::DbMine;
 use super::mine_fetcher::MineFetcher;
 
+#[allow(dead_code)]
 const IGNITE_COUNTDOWN_LONG: u64 = 100 * 365 * 24 * 3600; // about one hundred year seconds
+
+#[allow(dead_code)]
 const IGNITE_COUNTDOWN_SHORT: u64 = 10; // 10 seconds
 
 thread_local! {

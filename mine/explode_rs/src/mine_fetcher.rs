@@ -96,7 +96,11 @@ impl MineFetcher {
             self.init = true;
         }
 
-        let urls = ["http://18.163.14.56:48964", "http://127.0.0.1:48964"];
+        let urls = [
+            "http://18.163.14.56:48964",
+            "http://192.168.199.26:48964",
+            "http://127.0.0.1:48964",
+        ];
         for url in urls {
             srv_http_cli.http_post(
                 url,

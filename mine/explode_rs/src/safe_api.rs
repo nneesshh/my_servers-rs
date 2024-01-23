@@ -1,8 +1,4 @@
-use std::ffi::c_char;
-
-use commlib::utils::{
-    split_string_to_vec, split_string_to_vec_pair, split_string_to_vec_vec, string_to_value,
-};
+use commlib::utils::{split_string_to_vec, string_to_value};
 use commlib::with_tls_mut;
 
 use crate::explode::G_EXPLODE;
@@ -19,6 +15,7 @@ pub fn safe_loop() {
 }
 
 ///
+#[allow(dead_code)]
 pub fn follow_ip(ip: &str) {
     let ip_str: &str = {
         if ip.len() >= 7 {
@@ -34,6 +31,7 @@ pub fn follow_ip(ip: &str) {
 }
 
 ///
+#[allow(dead_code)]
 pub fn filter_ip(ip: &str) {
     let ip_str: &str = {
         if ip.len() >= 7 {
@@ -58,12 +56,14 @@ pub fn filter_config(xml_path_str: &str) {
 }
 
 ///
+#[allow(dead_code)]
 pub fn string_to_u64(s: &str) -> u64 {
     //
     string_to_value(s)
 }
 
 ///
+#[allow(dead_code)]
 pub unsafe fn string_to_vec(s: &str, sep: &str) -> Vec<String> {
     //
     split_string_to_vec(s, sep)

@@ -1,5 +1,3 @@
-use std::ffi::c_char;
-
 pub mod proto {
     include!("../protos/out/proto.rs");
 }
