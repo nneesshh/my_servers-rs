@@ -13,6 +13,14 @@ int main(int argc, char** argv) {
 	filter_ip(in_ip);
 
 	//
+	const char* s = "123,456|789";
+	auto vec = string_to_vec(s, ",");
+	for (auto s : vec) {
+		printf("s=%s \r\n", s.c_str());
+		printf("n=%d \r\n", string_to_u64(s.c_str()));
+	}
+
+	//
 	for (;;) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		safe_loop();
